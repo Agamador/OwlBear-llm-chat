@@ -75,7 +75,7 @@ async function sendMessage() {
     } finally {
       // Re-enable send button
       sendButton.disabled = false;
-      sendButton.textContent = "Send";
+      sendButton.textContent = "🪶";
     }
   }
 }
