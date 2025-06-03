@@ -55,7 +55,7 @@ async function sendMessage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: content,
+          query: content,
           user: "Player"
         })
       });
