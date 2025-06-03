@@ -21,7 +21,7 @@ document.querySelector('#app').innerHTML = `
     </div>
     <div class="chat-input-container">
       <input type="text" id="message-input" placeholder="Type your message..." />
-      <button id="send-button">Send</button>
+      <button id="send-button" aria-label="Send message">🪶</button>
     </div>
   </div>
 `
