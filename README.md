@@ -1,6 +1,6 @@
 # OwlBear LLM Chat
 
-A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, featuring authentic parchment styling and medieval fonts.
+A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, featuring authentic parchment styling and medieval fonts. Designed for integration with external APIs and LLM services.
 
 ## Features
 
@@ -8,7 +8,9 @@ A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, fea
 - 📜 **No Message Boxes**: Clean text display without modern chat bubbles
 - ⚔️ **D&D Style**: Dungeon Master and Player roles with distinctive styling
 - 🎨 **Custom Typography**: Medieval fonts including Cinzel, Berkshire Swash, and Metamorphous
-- 💬 **Real-time Chat**: Instant messaging with simulated responses
+- 🌐 **API Integration**: POST request functionality for external chat services
+- 🪶 **Elegant UI**: Embedded send button with quill emoji and medieval styling
+- ⚡ **Lightweight**: Minimal dependencies with pure vanilla JavaScript
 
 ## Screenshots
 
@@ -29,22 +31,43 @@ The interface features:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Agamador/OwlBear-llm-chat.git
 cd OwlBear-llm-chat
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
 
 4. Open your browser and navigate to `http://localhost:5173`
+
+### API Configuration
+
+To connect your chat to an external API, update the `sendMessage()` function in `src/main.js`:
+
+```javascript
+// Replace this URL with your actual API endpoint
+const response = await fetch('https://your-api-endpoint.com/chat', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    message: content,
+    user: "Player"
+  })
+});
+```
 
 ### Build for Production
 
@@ -57,16 +80,32 @@ npm run build
 ```
 llm-DM/
 ├── index.html          # Main HTML file with Google Fonts imports
-├── package.json        # Project dependencies and scripts
-├── vite.config.js      # Vite configuration
+├── package.json        # Project dependencies (Vite only)
+├── vite.config.js      # Vite configuration with CORS for Owlbear Rodeo
+├── README.md           # Project documentation
 ├── src/
-│   ├── main.js         # Application logic and chat functionality
+│   ├── main.js         # Application logic and API integration
 │   ├── style.css       # Medieval theme styling
 │   └── oldpaper.jpeg   # Background texture image
 └── public/
-    ├── vite.svg
-    └── manifest.json
+    ├── icon.svg        # Application icon
+    ├── vite.svg        # Vite logo
+    └── manifest.json   # Web app manifest
 ```
+
+## Dependencies
+
+This project has been optimized for minimal dependencies:
+
+- **vite**: Fast build tool and development server (dev dependency only)
+- **No runtime dependencies**: Pure vanilla JavaScript for optimal performance
+
+Previously removed unused dependencies:
+- `@modelcontextprotocol/sdk`
+- `ollama`
+- `express`
+- `socket.io`
+- `cors`
 
 ## Customization
 
@@ -90,9 +129,49 @@ Replace `src/oldpaper.jpeg` with your own parchment texture for a different look
 ## Technologies Used
 
 - **Vite**: Fast build tool and dev server
-- **Vanilla JavaScript**: Pure JS for lightweight performance
-- **CSS3**: Modern styling with medieval aesthetics
+- **Vanilla JavaScript**: Pure JS with fetch API for external communication
+- **CSS3**: Modern styling with medieval aesthetics and responsive design
 - **Google Fonts**: Medieval and fantasy typography
+- **Fetch API**: Native browser API for HTTP requests (no external HTTP libraries needed)
+
+## API Integration
+
+The chat interface is designed to work with any REST API that accepts POST requests. The current implementation:
+
+1. Sends user messages to a configurable endpoint
+2. Displays loading state while waiting for response
+3. Handles errors gracefully with medieval-themed messages
+4. Supports any JSON response format (configurable in `main.js`)
+
+Example API call structure:
+```javascript
+POST /your-endpoint
+Content-Type: application/json
+
+{
+  "message": "Hello, Dungeon Master!",
+  "user": "Player"
+}
+```
+
+## Recent Updates
+
+### v2.0 - Dependency Cleanup & API Integration
+- ✅ Removed all unused dependencies (110 packages eliminated)
+- ✅ Added POST request functionality for external API integration
+- ✅ Implemented error handling with medieval-themed messages
+- ✅ Added loading states during API calls
+- ✅ Cleaned up unused files (`counter.js`, `javascript.svg`, `.env`)
+- ✅ Optimized for pure vanilla JavaScript performance
+- ✅ Enhanced documentation with API integration guide
+
+### v1.0 - Medieval Theme Implementation
+- ✅ Full medieval D&D interface design
+- ✅ Old parchment background texture
+- ✅ Medieval font integration via Google Fonts
+- ✅ Sender names above messages (no timestamps)
+- ✅ Removed message boxes for clean text display
+- ✅ Proper message alignment and spacing
 
 ## Contributing
 
@@ -111,3 +190,4 @@ This project is open source and available under the [MIT License](LICENSE).
 - Inspired by classic D&D tabletop gaming
 - Medieval fonts provided by Google Fonts
 - Built with modern web technologies for authentic retro feel
+- Optimized for integration with AI/LLM services
