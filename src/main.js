@@ -47,9 +47,8 @@ async function sendMessage() {
     sendButton.disabled = true;
     sendButton.textContent = "Sending...";
 
-    try {
-      // Make POST request to external API
-      const response = await fetch('https://api.example.com/chat', {
+    try {      // Make POST request to backend API
+      const response = await fetch('http://localhost:3000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
