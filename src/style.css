@@ -142,6 +142,151 @@ body {
   text-align: right;
 }
 
+/* Medieval loading animations */
+@keyframes medievalPulse {
+  0% {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 0 0 0 rgba(212, 175, 55, 0.7);
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    box-shadow:
+      0 3px 6px rgba(0, 0, 0, 0.15),
+      0 0 0 8px rgba(212, 175, 55, 0.1);
+    transform: translateY(-50%) scale(1.05);
+  }
+  100% {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 0 0 0 rgba(212, 175, 55, 0);
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+@keyframes shimmerText {
+  0% {
+    opacity: 0.7;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+  }
+  50% {
+    opacity: 1;
+    text-shadow:
+      0 0 10px rgba(212, 175, 55, 0.6),
+      0 0 15px rgba(212, 175, 55, 0.4);
+  }
+  100% {
+    opacity: 0.7;
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+  }
+}
+
+/* Loading dots animation */
+@keyframes loadingDots {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.loading-dots {
+  animation: loadingDots 1.4s infinite linear;
+}
+
+.loading-dots::after {
+  content: "";
+  animation: loadingDots 1.4s infinite linear;
+  animation-delay: 0.2s;
+}
+
+.loading-dots::before {
+  content: "";
+  animation: loadingDots 1.4s infinite linear;
+  animation-delay: 0.4s;
+}
+
+/* Loading message special styling */
+.loading-message .message-content {
+  font-style: italic;
+  color: #8b4513;
+  animation: shimmerText 1.5s infinite;
+  opacity: 1;
+  font-weight: 500;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%);
+  border-left: 3px solid #d4af37;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  font-size: 1.05rem;
+}
+
+/* Special styling for loading message sender */
+.loading-message .message-sender {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(255, 215, 0, 0.2) 100%);
+  border: 2px solid #d4af37;
+  color: #8b4513;
+  font-weight: bolder;
+  text-shadow: 0 1px 2px rgba(212, 175, 55, 0.5);
+  animation: fadeInMessage 0.3s ease-out;
+}
+
+/* Pulsing border animation for loading messages */
+@keyframes pulsingBorder {
+  0% {
+    border-left-color: #d4af37;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  }
+  50% {
+    border-left-color: #ffd700;
+    box-shadow:
+      0 2px 15px rgba(212, 175, 55, 0.4),
+      inset 0 0 20px rgba(212, 175, 55, 0.1);
+  }
+  100% {
+    border-left-color: #d4af37;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  }
+}
+
+.loading-message .message-content {
+  animation:
+    shimmerText 1.5s infinite,
+    pulsingBorder 2s infinite !important;
+}
+
+/* Fade in animation for new messages */
+@keyframes fadeInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-message {
+  animation: fadeInMessage 0.3s ease-out;
+}
+
+/* Disabled send button styling */
+#send-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+#send-button:disabled:hover {
+  transform: translateY(-50%) scale(1);
+  background: linear-gradient(135deg, #f4e8d0 0%, #e8dcc0 100%);
+}
+
 .chat-input-container {
   display: flex;
   padding: 1rem;

@@ -34,6 +34,9 @@ function addMessage(content, senderName, isOutgoing = true) {
 
   chatMessages.appendChild(messageDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Return the element so it can be removed if needed
+  return messageDiv;
 }
 
 async function sendMessage() {
@@ -41,11 +44,41 @@ async function sendMessage() {
   if (content) {
     // Add player message to chat
     addMessage(content, "Player", true);
-    messageInput.value = '';
+    messageInput.value = '';    // Add medieval loading indicator
+    const loadingMessages = [
+      "🔮 The Dungeon Master consults the ancient scrolls...",
+      "⚡ Arcane energies swirl through the ethereal plane...",
+      "📜 Deciphering the mystical runes...",
+      "🌟 The crystal ball reveals hidden knowledge...",
+      "⚔️ Summoning wisdom from the realm of shadows...",
+      "🧙‍♂️ Channeling the power of the arcane...",
+      "🌙 The spirits whisper their secrets...",
+      "💫 Consulting the celestial archives...",
+      "🏰 Searching the great library of ages...",
+      "🕯️ Invoking the ancient rituals...",
+      "⚖️ Weighing the scales of destiny...",
+      "🗝️ Unlocking forbidden knowledge...",
+      "🌿 Gathering wisdom from the forest druids...",
+      "🦉 The wise owl brings tidings...",
+      "🃏 Drawing cards from the deck of fate...",
+      "🧪 Brewing insights in the alchemical cauldron...",
+      "👁️ The all-seeing eye opens...",
+      "🌊 Diving into the depths of memory...",
+      "🔥 Stoking the flames of inspiration...",
+      "❄️ Consulting the ice-bound prophecies...",
+      "🍄 The mushroom circle reveals its secrets...",
+      "🦄 A unicorn shares its divine wisdom...",
+      "🐉 The ancient dragon stirs from slumber...",
+      "⭐ Aligning with the cosmic forces..."
+    ];
+    const randomLoadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+    const loadingMessageElement = addMessage(randomLoadingMessage, "Dungeon Master", false);
+    loadingMessageElement.classList.add('loading-message');
 
-    // Disable send button while processing
+    // Add loading animation to send button
     sendButton.disabled = true;
-    sendButton.textContent = "Sending...";
+    sendButton.style.animation = "medievalPulse 1s infinite";
+    sendButton.setAttribute('aria-label', 'Communing with the spirits...');
 
     try {      // Make POST request to backend API
       const response = await fetch('http://localhost:3000/chat', {
@@ -58,6 +91,10 @@ async function sendMessage() {
           user: "Player"
         })
       });
+      // Wait for the response from the server
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      // Remove loading message
+      loadingMessageElement.remove();
 
       if (response.ok) {
         const data = await response.json();
@@ -69,12 +106,15 @@ async function sendMessage() {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      // Remove loading message on error
+      loadingMessageElement.remove();
       // Add error message as Dungeon Master response
       addMessage("The arcane winds have interfered with our communication. Please try again.", "Dungeon Master", false);
     } finally {
-      // Re-enable send button
+      // Reset send button
       sendButton.disabled = false;
-      sendButton.textContent = "🪶";
+      sendButton.style.animation = "";
+      sendButton.setAttribute('aria-label', 'Send message');
     }
   }
 }
