@@ -10,14 +10,6 @@ document.querySelector('#app').innerHTML = `
         <div class="message-sender">Dungeon Master</div>
         <div class="message-content">Hello! How can I help you today?</div>
       </div>
-      <div class="message outgoing">
-        <div class="message-sender">Player</div>
-        <div class="message-content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
-      </div>
-      <div class="message incoming">
-        <div class="message-sender">Dungeon Master</div>
-        <div class="message-content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
-      </div>
     </div>
     <div class="chat-input-container">
       <input type="text" id="message-input" placeholder="Type your message..." />
@@ -44,16 +36,47 @@ function addMessage(content, senderName, isOutgoing = true) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function sendMessage() {
+async function sendMessage() {
   const content = messageInput.value.trim();
   if (content) {
+    // Add player message to chat
     addMessage(content, "Player", true);
     messageInput.value = '';
 
-    // Simulate an incoming response after a delay
-    setTimeout(() => {
-      addMessage("Thanks for your message! This is a simulated response.", "Dungeon Master", false);
-    }, 1000);
+    // Disable send button while processing
+    sendButton.disabled = true;
+    sendButton.textContent = "Sending...";
+
+    try {
+      // Make POST request to external API
+      const response = await fetch('https://api.example.com/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: content,
+          user: "Player"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Add response from API as Dungeon Master message
+        addMessage(data.response || data.message || "No response received", "Dungeon Master", false);
+      } else {
+        // Handle API error
+        addMessage("The mystical connection has been disrupted. Please try again.", "Dungeon Master", false);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Add error message as Dungeon Master response
+      addMessage("The arcane winds have interfered with our communication. Please try again.", "Dungeon Master", false);
+    } finally {
+      // Re-enable send button
+      sendButton.disabled = false;
+      sendButton.textContent = "Send";
+    }
   }
 }
 
