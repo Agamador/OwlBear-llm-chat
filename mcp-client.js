@@ -5,12 +5,9 @@ import { Ollama } from "ollama";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen3:8b";
+const OLLAMA_HOST = "http://localhost:11434";
+const OLLAMA_MODEL = "qwen3:8b";
 
 class MCPClient {
     constructor() {
@@ -28,11 +25,6 @@ class MCPClient {
         if (!isJs && !isPy) {
             throw new Error("Server script must be a .js or .py file");
         }
-        const command = isPy
-            ? process.platform === "win32"
-                ? "python"
-                : "python3"
-            : process.execPath;
 
         this.transport = new StdioClientTransport({
             command, // python /path/to/server.py

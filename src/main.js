@@ -1,5 +1,4 @@
 import './style.css';
-import MCPClient from './mcp-client';
 
 document.querySelector('#app').innerHTML = `
   <div class="chat-container">
@@ -23,7 +22,6 @@ document.querySelector('#app').innerHTML = `
 const messageInput = document.querySelector('#message-input');
 const sendButton = document.querySelector('#send-button');
 const chatMessages = document.querySelector('#chat-messages');
-const mcpClient = new MCPClient();
 
 function addMessage(content, senderName, isOutgoing = true) {
   const messageDiv = document.createElement('div');
@@ -43,16 +41,6 @@ function sendMessage() {
   if (content) {
     addMessage(content, "Player", true); // TODO: Real Player Name
     messageInput.value = '';
-
-    // Call the MCP client to process the message
-    mcpClient.processQuery(content)
-      .then(response => {
-        addMessage(response, "Dungeon Master", false); // TODO: Real Dungeon Master Name
-      })
-      .catch(error => {
-        console.error("Error processing message:", error);
-        addMessage("Error processing message. Please try again.", "Dungeon Master", false);
-      });
   }
 }
 
