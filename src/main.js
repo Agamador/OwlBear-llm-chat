@@ -1,4 +1,5 @@
 import './style.css';
+import MCPClient from './mcp-client';
 
 document.querySelector('#app').innerHTML = `
   <div class="chat-container">
@@ -9,14 +10,6 @@ document.querySelector('#app').innerHTML = `
       <div class="message incoming">
         <div class="message-sender">Dungeon Master</div>
         <div class="message-content">Hello! How can I help you today?</div>
-      </div>
-      <div class="message outgoing">
-        <div class="message-sender">Player</div>
-        <div class="message-content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
-      </div>
-      <div class="message incoming">
-        <div class="message-sender">Dungeon Master</div>
-        <div class="message-content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
       </div>
     </div>
     <div class="chat-input-container">
@@ -30,6 +23,7 @@ document.querySelector('#app').innerHTML = `
 const messageInput = document.querySelector('#message-input');
 const sendButton = document.querySelector('#send-button');
 const chatMessages = document.querySelector('#chat-messages');
+const mcpClient = new MCPClient();
 
 function addMessage(content, senderName, isOutgoing = true) {
   const messageDiv = document.createElement('div');
@@ -47,13 +41,18 @@ function addMessage(content, senderName, isOutgoing = true) {
 function sendMessage() {
   const content = messageInput.value.trim();
   if (content) {
-    addMessage(content, "Player", true);
+    addMessage(content, "Player", true); // TODO: Real Player Name
     messageInput.value = '';
 
-    // Simulate an incoming response after a delay
-    setTimeout(() => {
-      addMessage("Thanks for your message! This is a simulated response.", "Dungeon Master", false);
-    }, 1000);
+    // Call the MCP client to process the message
+    mcpClient.processQuery(content)
+      .then(response => {
+        addMessage(response, "Dungeon Master", false); // TODO: Real Dungeon Master Name
+      })
+      .catch(error => {
+        console.error("Error processing message:", error);
+        addMessage("Error processing message. Please try again.", "Dungeon Master", false);
+      });
   }
 }
 
