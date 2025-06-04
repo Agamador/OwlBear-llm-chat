@@ -1,4 +1,8 @@
+import { setupServiceWorker } from './api/service-worker-client.js';
 import './style.css';
+
+// Inicializar Service Worker
+setupServiceWorker();
 
 document.querySelector('#app').innerHTML = `
   <div class="chat-container">
@@ -16,7 +20,7 @@ document.querySelector('#app').innerHTML = `
       <button id="send-button" aria-label="Send message">🪶</button>
     </div>
   </div>
-`
+`;
 
 // Setup chat functionality
 const messageInput = document.querySelector('#message-input');
@@ -40,6 +44,17 @@ function addMessage(content, senderName, isOutgoing = true) {
 }
 
 async function sendMessage() {
+  // Ejemplo de uso de la API de OBR (opcional):
+  // try {
+  //   const gameState = await obrAPI.getGameState();
+  //   console.log('OBR Game State:', gameState);
+  //   
+  //   const actionResult = await obrAPI.executeAction('getGameState');
+  //   console.log('Action Result:', actionResult);
+  // } catch (error) {
+  //   console.error('Error calling OBR API:', error);
+  // }
+
   const content = messageInput.value.trim();
   if (content) {
     // Add player message to chat

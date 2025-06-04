@@ -6,5 +6,5 @@ export default defineConfig({
         cors: true, // Allow all origins for development
         port: 5173,
         host: 'localhost'
-    },
+    }
 });
