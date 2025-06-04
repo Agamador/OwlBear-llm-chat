@@ -9,6 +9,8 @@ class OBRWebSocketClient {
         this.pendingRequests = new Map();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        // 🔥 NUEVO: Map para peticiones pendientes con correlationId
+        this.pendingExternalRequests = new Map();
     }
 
     /**
@@ -30,29 +32,25 @@ class OBRWebSocketClient {
 
                 this.ws.onmessage = (event) => {
                     try {
-                        this.handleMessage(JSON.parse(event.data));
+                        const message = JSON.parse(event.data);
+                        this.handleMessage(message);
                     } catch (error) {
                         console.error('Error parsing WebSocket message:', error);
                     }
                 };
 
-                this.ws.onclose = (event) => {
-                    console.log(`❌ WebSocket connection closed (Code: ${event.code}, Reason: ${event.reason})`);
+                this.ws.onclose = () => {
+                    console.log('🔌 WebSocket disconnected');
                     this.isConnected = false;
+                    this.clientId = null;
                     this.attemptReconnect();
                 };
 
                 this.ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    this.isConnected = false;
-                    // Si es el primer intento, rechazar la promesa
-                    if (this.reconnectAttempts === 0) {
-                        reject(new Error('Failed to connect to WebSocket server. Make sure the server is running on port 5174.'));
-                    }
+                    console.error('❌ WebSocket error:', error);
+                    reject(error);
                 };
-
             } catch (error) {
-                console.error('Error creating WebSocket connection:', error);
                 reject(error);
             }
         });
@@ -79,12 +77,18 @@ class OBRWebSocketClient {
      * Manejar mensajes del servidor
      */
     async handleMessage(message) {
-        const { type, requestId } = message;
+        const { type, requestId, correlationId } = message;
 
         switch (type) {
             case 'CONNECTION_ESTABLISHED':
                 this.clientId = message.clientId;
-                console.log(`✅ Client registered with ID: ${this.clientId}`);
+                this.isConnected = true;
+                console.log(`🔗 WebSocket connected with ID: ${this.clientId}`);
+                await this.registerClient();
+                break;
+
+            case 'CLIENT_REGISTERED':
+                console.log('📝 Client registered successfully');
                 break;
 
             case 'EXECUTE_OBR_ACTION':
@@ -96,17 +100,97 @@ class OBRWebSocketClient {
                 break;
 
             case 'CLIENTS_LIST':
-                this.handleClientsList(message);
+                this.handleActionResponse(message);
                 break;
 
-            case 'BROADCAST_MESSAGE':
-                this.handleBroadcast(message);
+            case 'PONG':
+                console.log('🏓 Pong received');
+                break;
+
+            // 🔥 NUEVO: Manejar respuestas de servicios externos
+            case 'EXTERNAL_SERVICE_RESPONSE':
+                this.handleExternalServiceResponse(message);
                 break;
 
             case 'ERROR':
-                console.error('WebSocket Error:', message.error);
+                console.error('❌ WebSocket error:', message.error);
                 break;
+
+            default:
+                console.warn('⚠️ Unknown message type:', type);
         }
+    }
+
+    // 🔥 NUEVO: Manejar respuesta de servicio externo
+    handleExternalServiceResponse(message) {
+        const { correlationId, response, error } = message;
+        const pendingRequest = this.pendingExternalRequests.get(correlationId);
+
+        if (pendingRequest) {
+            if (error) {
+                pendingRequest.reject(new Error(error));
+            } else {
+                pendingRequest.resolve(response);
+            }
+            this.pendingExternalRequests.delete(correlationId);
+            console.log(`✅ External service response handled for: ${correlationId}`);
+        } else {
+            console.warn(`⚠️ No pending external request found for: ${correlationId}`);
+        }
+    }
+
+    // 🔥 NUEVO: Llamar a servicio externo con callback
+    async callExternalService(message, timeoutMs = 30000) {
+        const correlationId = this.generateCorrelationId();
+
+        return new Promise((resolve, reject) => {
+            // Registrar la petición pendiente
+            this.pendingExternalRequests.set(correlationId, { resolve, reject });
+
+            // Registrar correlationId en el servidor WebSocket
+            this.send({
+                type: 'REGISTER_PENDING_REQUEST',
+                correlationId
+            });
+
+            // Configurar timeout
+            const timeout = setTimeout(() => {
+                this.pendingExternalRequests.delete(correlationId);
+                reject(new Error('External service call timeout'));
+            }, timeoutMs);
+
+            // Actualizar el resolver para limpiar el timeout
+            const originalResolve = resolve;
+            const originalReject = reject;
+
+            this.pendingExternalRequests.set(correlationId, {
+                resolve: (value) => {
+                    clearTimeout(timeout);
+                    originalResolve(value);
+                },
+                reject: (error) => {
+                    clearTimeout(timeout);
+                    originalReject(error);
+                }
+            });
+
+            // Simular llamada al servicio externo (aquí irías a tu API real)
+            fetch('http://localhost:3000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: JSON.stringify({
+                        correlationId,
+                        message
+                    })
+                })
+            }).catch(reject);
+        });
+    }
+
+    // 🔥 NUEVO: Generar correlation ID único
+    generateCorrelationId() {
+        return `corr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     }
 
     /**
@@ -350,7 +434,17 @@ export const obrAPI = {
      */
     isConnected() {
         return obrWebSocketClient.isConnected;
-    }
+    },
+
+    /**
+     * 🔥 NUEVO: Llamar a servicio externo
+     */
+    async callExternalService(message, timeoutMs = 30000) {
+        if (!obrWebSocketClient.isConnected) {
+            throw new Error('WebSocket not connected');
+        }
+        return obrWebSocketClient.callExternalService(message, timeoutMs);
+    },
 };
 
 export default obrWebSocketClient;
