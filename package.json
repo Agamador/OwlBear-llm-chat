@@ -1,19 +1,20 @@
 {
-  "name": "llm-dm",
+  "name": "obr-chat-simple",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "vite": "^6.3.5",
-    "concurrently": "^9.1.0"
+    "server": "node server.js",
+    "build": "vite build"
   },
   "dependencies": {
     "@owlbear-rodeo/sdk": "^3.1.0",
-    "ws": "^8.18.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "obr-chat-simple": "file:"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
   }
 }

@@ -1,450 +1,129 @@
+// 🚀 CHAT SIMPLIFICADO
+import { executeAction } from './obr/obr-actions.js';
 import OBR from '@owlbear-rodeo/sdk';
-import { availableActions, getGameState } from './obr/obr-actions.js';
 
-class OBRWebSocketClient {
+class SimpleChat {
     constructor() {
-        this.ws = null;
-        this.clientId = null;
-        this.isConnected = false;
-        this.pendingRequests = new Map();
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        // 🔥 NUEVO: Map para peticiones pendientes con correlationId
-        this.pendingExternalRequests = new Map();
+        this.tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        this.setupExternalActions();
     }
 
-    /**
-     * Conectar al servidor WebSocket
-     */
-    async connect() {
-        return new Promise((resolve, reject) => {
+    // Escuchar acciones desde servicios externos
+    setupExternalActions() {
+        const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
+        eventSource.onmessage = (event) => {
+            console.log('📨 Mensaje recibido:', event.data);
+
             try {
-                console.log('🔌 Attempting to connect to WebSocket server...');
-                this.ws = new WebSocket('ws://localhost:5174');
+                const data = JSON.parse(event.data);
 
-                this.ws.onopen = () => {
-                    console.log('✅ Connected to OBR WebSocket Server');
-                    this.isConnected = true;
-                    this.reconnectAttempts = 0;
-                    this.registerClient();
-                    resolve();
-                };
+                // Ignorar pings
+                if (data.type === 'ping') {
+                    console.log('🏓 Ping recibido');
+                    return;
+                }
 
-                this.ws.onmessage = (event) => {
-                    try {
-                        const message = JSON.parse(event.data);
-                        this.handleMessage(message);
-                    } catch (error) {
-                        console.error('Error parsing WebSocket message:', error);
-                    }
-                };
-
-                this.ws.onclose = () => {
-                    console.log('🔌 WebSocket disconnected');
-                    this.isConnected = false;
-                    this.clientId = null;
-                    this.attemptReconnect();
-                };
-
-                this.ws.onerror = (error) => {
-                    console.error('❌ WebSocket error:', error);
-                    reject(error);
-                };
+                // Verificar que tenga action y args
+                if (data.action && data.args !== undefined) {
+                    console.log('🎮 Ejecutando acción:', data.action, 'con argumentos:', data.args);
+                    this.executeOBRAction(data.action, data.args);
+                } else {
+                    console.warn('⚠️ Mensaje sin action o args:', data);
+                }
             } catch (error) {
-                reject(error);
+                console.error('❌ Error parseando mensaje SSE:', error);
             }
-        });
-    }
-
-    /**
-     * Registrar cliente con metadatos
-     */
-    async registerClient() {
-        const metadata = {
-            playerName: await this.getPlayerName(),
-            roomId: await this.getRoomId(),
-            userAgent: navigator.userAgent,
-            url: window.location.href
         };
 
-        this.send({
-            type: 'REGISTER_CLIENT',
-            metadata: metadata
-        });
+        eventSource.onerror = (error) => {
+            console.error('❌ Error en SSE:', error);
+        };
+
+        eventSource.onopen = () => {
+            console.log('✅ Conexión SSE establecida, TabId:', this.tabId);
+        };
     }
 
-    /**
-     * Manejar mensajes del servidor
-     */
-    async handleMessage(message) {
-        const { type, requestId, correlationId } = message;
+    // Ejecutar acción OBR
+    async executeOBRAction(action, args) {
+        try {
+            console.log('🚀 Ejecutando:', action, 'con args:', args);
 
-        switch (type) {
-            case 'CONNECTION_ESTABLISHED':
-                this.clientId = message.clientId;
-                this.isConnected = true;
-                console.log(`🔗 WebSocket connected with ID: ${this.clientId}`);
-                await this.registerClient();
-                break;
-
-            case 'CLIENT_REGISTERED':
-                console.log('📝 Client registered successfully');
-                break;
-
-            case 'EXECUTE_OBR_ACTION':
-                await this.executeOBRAction(message);
-                break;
-
-            case 'OBR_ACTION_RESPONSE':
-                this.handleActionResponse(message);
-                break;
-
-            case 'CLIENTS_LIST':
-                this.handleActionResponse(message);
-                break;
-
-            case 'PONG':
-                console.log('🏓 Pong received');
-                break;
-
-            // 🔥 NUEVO: Manejar respuestas de servicios externos
-            case 'EXTERNAL_SERVICE_RESPONSE':
-                this.handleExternalServiceResponse(message);
-                break;
-
-            case 'ERROR':
-                console.error('❌ WebSocket error:', message.error);
-                break;
-
-            default:
-                console.warn('⚠️ Unknown message type:', type);
-        }
-    }
-
-    // 🔥 NUEVO: Manejar respuesta de servicio externo
-    handleExternalServiceResponse(message) {
-        const { correlationId, response, error } = message;
-        const pendingRequest = this.pendingExternalRequests.get(correlationId);
-
-        if (pendingRequest) {
-            if (error) {
-                pendingRequest.reject(new Error(error));
-            } else {
-                pendingRequest.resolve(response);
+            // Verificar que args sea un array
+            if (!Array.isArray(args)) {
+                console.warn('⚠️ Args no es array, convirtiendo:', args);
+                args = args ? [args] : [];
             }
-            this.pendingExternalRequests.delete(correlationId);
-            console.log(`✅ External service response handled for: ${correlationId}`);
-        } else {
-            console.warn(`⚠️ No pending external request found for: ${correlationId}`);
+
+            const result = await executeAction(action, ...args);
+            console.log('✅ Acción completada:', result);
+            return result;
+        } catch (error) {
+            console.log(error);
+            console.error('❌ Error ejecutando acción:', error);
+            throw error;
         }
     }
 
-    // 🔥 NUEVO: Llamar a servicio externo con callback
-    async callExternalService(message, timeoutMs = 30000) {
-        const correlationId = this.generateCorrelationId();
-
-        return new Promise((resolve, reject) => {
-            // Registrar la petición pendiente
-            this.pendingExternalRequests.set(correlationId, { resolve, reject });
-
-            // Registrar correlationId en el servidor WebSocket
-            this.send({
-                type: 'REGISTER_PENDING_REQUEST',
-                correlationId
-            });
-
-            // Configurar timeout
-            const timeout = setTimeout(() => {
-                this.pendingExternalRequests.delete(correlationId);
-                reject(new Error('External service call timeout'));
-            }, timeoutMs);
-
-            // Actualizar el resolver para limpiar el timeout
-            const originalResolve = resolve;
-            const originalReject = reject;
-
-            this.pendingExternalRequests.set(correlationId, {
-                resolve: (value) => {
-                    clearTimeout(timeout);
-                    originalResolve(value);
-                },
-                reject: (error) => {
-                    clearTimeout(timeout);
-                    originalReject(error);
-                }
-            });
-
-            // Simular llamada al servicio externo (aquí irías a tu API real)
-            fetch('http://localhost:3000/chat', {
+    // Chat con IA en Gradio
+    async sendChatMessage(message) {
+        try {
+            const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    query: JSON.stringify({
-                        correlationId,
-                        message
-                    })
-                })
-            }).catch(reject);
-        });
-    }
-
-    // 🔥 NUEVO: Generar correlation ID único
-    generateCorrelationId() {
-        return `corr_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    }
-
-    /**
-     * Ejecutar acción OBR y enviar respuesta
-     */
-    async executeOBRAction(message) {
-        const { action, args, requestId, fromClientId } = message;
-
-        try {
-            // Esperar a que OBR esté listo
-            await new Promise(resolve => OBR.onReady(() => resolve()));
-
-            // Ejecutar la acción
-            let result;
-            if (action === 'getGameState') {
-                result = await getGameState();
-            } else if (availableActions[action]) {
-                result = await availableActions[action](...(args || []));
-            } else {
-                throw new Error(`Action '${action}' not found`);
-            }
-
-            // Enviar respuesta
-            this.send({
-                type: 'OBR_ACTION_RESPONSE',
-                requestId,
-                fromClientId,
-                success: true,
-                data: result,
-                timestamp: new Date().toISOString()
+                body: JSON.stringify({ data: [message] })
             });
 
+            const result = await response.json();
+            const eventId = result.event_id;
+
+            // Esperar respuesta
+            return await this.waitForResponse(eventId);
         } catch (error) {
-            this.send({
-                type: 'OBR_ACTION_RESPONSE',
-                requestId,
-                fromClientId,
-                success: false,
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
+            throw new Error('Error conectando con IA: ' + error.message);
         }
     }
 
-    /**
-     * Manejar respuesta de acción
-     */
-    handleActionResponse(message) {
-        const { requestId } = message;
-        const pendingRequest = this.pendingRequests.get(requestId);
+    async waitForResponse(eventId) {
+        for (let i = 0; i < 15; i++) {
+            try {
+                const response = await fetch(`http://localhost:7860/gradio_api/call/predict/${eventId}`);
+                const data = await response.json();
 
-        if (pendingRequest) {
-            clearTimeout(pendingRequest.timeout);
-            this.pendingRequests.delete(requestId);
+                if (data.status === 'complete') return data.data;
+                if (data.status === 'error') throw new Error('Error en IA');
 
-            if (message.success) {
-                pendingRequest.resolve(message.data);
-            } else {
-                pendingRequest.reject(new Error(message.error));
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                if (i === 14) throw new Error('Timeout esperando respuesta de IA');
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
     }
-
-    /**
-     * Enviar mensaje al servidor
-     */
-    send(message) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(message));
-        } else {
-            console.warn('WebSocket not connected, message not sent:', message);
-        }
-    }
-
-    /**
-     * Ejecutar acción en cliente específico
-     */
-    async executeActionOnClient(targetClientId, action, args = []) {
-        return new Promise((resolve, reject) => {
-            const requestId = this.generateRequestId();
-
-            // Configurar timeout
-            const timeout = setTimeout(() => {
-                this.pendingRequests.delete(requestId);
-                reject(new Error('Request timeout'));
-            }, 10000);
-
-            // Guardar request pendiente
-            this.pendingRequests.set(requestId, { resolve, reject, timeout });
-
-            // Enviar petición
-            this.send({
-                type: 'OBR_ACTION_REQUEST',
-                targetClientId,
-                action,
-                args,
-                requestId
-            });
-        });
-    }
-
-    /**
-     * Ejecutar acción en este cliente
-     */
-    async executeAction(action, args = []) {
-        return this.executeActionOnClient(this.clientId, action, args);
-    }
-
-    /**
-     * Obtener lista de clientes conectados
-     */
-    async getConnectedClients() {
-        return new Promise((resolve, reject) => {
-            const requestId = this.generateRequestId();
-
-            const timeout = setTimeout(() => {
-                reject(new Error('Request timeout'));
-            }, 5000);
-
-            // Manejar respuesta
-            this.handleClientsList = (message) => {
-                if (message.requestId === requestId) {
-                    clearTimeout(timeout);
-                    resolve(message.clients);
-                }
-            };
-
-            this.send({
-                type: 'LIST_CLIENTS',
-                requestId
-            });
-        });
-    }
-
-    /**
-     * Reconectar automáticamente
-     */
-    attemptReconnect() {
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++;
-            console.log(`🔄 Attempting reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts}...`);
-
-            setTimeout(() => {
-                this.connect().catch(console.error);
-            }, 2000 * this.reconnectAttempts);
-        } else {
-            console.error('❌ Max reconnection attempts reached');
-        }
-    }
-
-    /**
-     * Obtener información del jugador
-     */
-    async getPlayerName() {
-        try {
-            await new Promise(resolve => OBR.onReady(() => resolve()));
-            return await OBR.player.getName();
-        } catch (error) {
-            return 'Unknown Player';
-        }
-    }
-
-    /**
-     * Obtener ID de la sala
-     */
-    async getRoomId() {
-        try {
-            await new Promise(resolve => OBR.onReady(() => resolve()));
-            const roomMetadata = await OBR.room.getMetadata();
-            return roomMetadata.id || 'unknown-room';
-        } catch (error) {
-            return 'unknown-room';
-        }
-    }
-
-    generateRequestId() {
-        return `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    }
 }
 
-// Instancia global del cliente
-const obrWebSocketClient = new OBRWebSocketClient();
+// Instancia global
+const simpleChat = new SimpleChat();
 
-/**
- * Configurar conexión WebSocket
- */
-export async function setupWebSocketConnection() {
-    try {
-        console.log('🚀 Initializing OBR WebSocket Client...');
-        await obrWebSocketClient.connect();
-        console.log('✅ OBR WebSocket Client initialized successfully');
-    } catch (error) {
-        console.warn('⚠️ Failed to initialize WebSocket connection:', error.message);
-        console.log('💡 Make sure to run the WebSocket server with: npm run server');
-        console.log('💡 Or run both frontend and server with: npm run dev:full');
-    }
-}
-
-/**
- * API de utilidades para usar WebSocket
- */
+// API simplificada
 export const obrAPI = {
-    /**
-     * Obtener estado del juego
-     */
-    async getGameState(clientId = null) {
-        if (clientId) {
-            return await obrWebSocketClient.executeActionOnClient(clientId, 'getGameState');
-        } else {
-            return await obrWebSocketClient.executeAction('getGameState');
-        }
+    // Chat con IA
+    async callExternalService(message) {
+        return await simpleChat.sendChatMessage(message);
     },
 
-    /**
-     * Ejecutar acción específica
-     */
-    async executeAction(action, args = [], clientId = null) {
-        if (clientId) {
-            return await obrWebSocketClient.executeActionOnClient(clientId, action, args);
-        } else {
-            return await obrWebSocketClient.executeAction(action, args);
-        }
+    // Ejecutar acción OBR
+    async executeOBRAction(action, ...args) {
+        return await simpleChat.executeOBRAction(action, args);
     },
 
-    /**
-     * Obtener clientes conectados
-     */
-    async getConnectedClients() {
-        return await obrWebSocketClient.getConnectedClients();
-    },
-
-    /**
-     * Obtener ID del cliente actual
-     */
-    getClientId() {
-        return obrWebSocketClient.clientId;
-    },
-
-    /**
-     * Verificar si está conectado
-     */
-    isConnected() {
-        return obrWebSocketClient.isConnected;
-    },
-
-    /**
-     * 🔥 NUEVO: Llamar a servicio externo
-     */
-    async callExternalService(message, timeoutMs = 30000) {
-        if (!obrWebSocketClient.isConnected) {
-            throw new Error('WebSocket not connected');
-        }
-        return obrWebSocketClient.callExternalService(message, timeoutMs);
-    },
+    // Obtener ID de pestaña
+    getTabId() {
+        return simpleChat.tabId;
+    }
 };
 
-export default obrWebSocketClient;
+// Setup simplificado (ya no necesita inicialización asíncrona)
+export function setupWebSocketConnection() {
+    console.log('✅ Chat listo, TabId:', simpleChat.tabId);
+}

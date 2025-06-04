@@ -1,68 +1,76 @@
-// Librería de acciones OBR
-// Estas funciones se ejecutan en el frontend donde el SDK de OBR está disponible
+// 🎮 OBR Actions - SIMPLIFICADO
+import OBR, { buildShape } from "@owlbear-rodeo/sdk";
 
-import OBR from '@owlbear-rodeo/sdk';
+// Crear formas
+export async function createShape(options) {
+    const { x = 0, y = 0, width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000' } = options;
+    console.log('Crear forma con opciones:', options);
 
-// Función para obtener el estado completo de la partida
-export async function getGameState() {
-    // Obtener toda la información del estado del juego
-    const gameState = {
-        scene: await OBR.scene.getMetadata(),
-        items: await OBR.scene.items.getItems(),
-        players: await OBR.party.getPlayers(),
-        room: await OBR.room.getMetadata(),
-        metadata: {
-            sceneReady: await OBR.scene.isReady(),
-            playerRole: await OBR.player.getRole(),
-            playerId: await OBR.player.getId(),
-            playerName: await OBR.player.getName()
-        },
-        timestamp: new Date().toISOString()
-    };
-    return gameState;
+    const item = buildShape()
+        .width(width)
+        .height(height)
+        .shapeType(shapeType)
+        .fillColor(fillColor)
+        .build();
+
+    const shape = await OBR.scene.items.addItems([item]);
+
+    console.log('Forma creada:', shape);
+
+    return { success: true, itemId: shape[0].id };
 }
 
-// Registro de acciones disponibles
-export const availableActions = {
-    getGameState: getGameState
-};
+// Crear texto
+export async function createText(text, x, y, options = {}) {
+    const textItem = await OBR.scene.items.addItems([{
+        id: `text_${Date.now()}`,
+        type: 'TEXT',
+        position: { x, y },
+        text,
+        style: { fontSize: options.fontSize || 16, color: options.color || '#000000' },
+        layer: 'TEXT'
+    }]);
 
-// Función para ejecutar una acción por nombre
+    return { success: true, itemId: textItem[0].id };
+}
+
+// Mover elementos
+export async function moveItems(itemIds, deltaX, deltaY) {
+    await OBR.scene.items.updateItems(itemIds, (items) => {
+        items.forEach(item => {
+            item.position.x += deltaX;
+            item.position.y += deltaY;
+        });
+    });
+    return { success: true };
+}
+
+// Eliminar elementos
+export async function deleteItems(itemIds) {
+    await OBR.scene.items.deleteItems(itemIds);
+    return { success: true };
+}
+
+// Ejecutor principal
 export async function executeAction(actionName, ...args) {
-    if (availableActions[actionName]) {
+    const actions = { createShape, createText, moveItems, deleteItems };
 
-        try {
-            // Verificar que OBR esté disponible
-            if (typeof OBR === 'undefined') {
-                throw new Error('OBR SDK not available');
-            }
-
-            // Esperar a que OBR esté listo y luego ejecutar la acción
-            return new Promise((resolve, reject) => {
-                OBR.onReady(async () => {
-                    try {
-                        const result = await availableActions[actionName](...args);
-                        resolve(result);
-                    } catch (error) {
-                        console.error(`Error executing action ${actionName}:`, error);
-                        reject(error);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error(`Error setting up action ${actionName}:`, error);
-            return {
-                success: false,
-                error: error.message,
-                timestamp: new Date().toISOString()
-            };
-        }
-    } else {
-        console.error(`Action '${actionName}' not found`);
-        return {
-            success: false,
-            error: `Action '${actionName}' not found`,
-            availableActions: Object.keys(availableActions)
-        };
+    if (!actions[actionName]) {
+        throw new Error(`Acción '${actionName}' no encontrada`);
     }
+
+    if (!OBR.isAvailable) {
+        throw new Error('OBR no disponible');
+    }
+
+    return new Promise((resolve, reject) => {
+        OBR.onReady(async () => {
+            try {
+                const result = await actions[actionName](...args);
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
 }

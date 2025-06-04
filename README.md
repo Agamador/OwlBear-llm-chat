@@ -1,8 +1,80 @@
-# OwlBear LLM Chat con OBR Actions
+# 🎮 OBR Chat - Sistema Simplificado
 
-A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, featuring authentic parchment styling and medieval fonts. Designed for integration with external APIs, LLM services, and Owlbear Rodeo (OBR) actions.
+## 📋 Resumen
 
-## Features
+Este sistema permite:
+
+1. **Frontend Vite**: Ejecuta acciones OBR y chatea con IA en Gradio
+2. **Servidor Simple**: Permite que servicios externos ejecuten acciones OBR en pestañas específicas  
+3. **IA en Gradio**: Procesa mensajes de chat
+
+## 🚀 Instalación
+
+```bash
+npm install
+```
+
+## ▶️ Uso
+
+### 1. Iniciar servidor de comunicación
+```bash
+npm run server
+```
+
+### 2. Iniciar frontend
+```bash
+npm run dev
+```
+
+### 3. Abrir en Owlbear Rodeo
+- Cargar la URL de Vite en OBR como extensión
+- Cada pestaña tendrá un ID único
+
+## 🔌 API para Servicios Externos
+
+### Ejecutar acción OBR en una pestaña específica
+
+```bash
+curl -X POST http://localhost:3000/api/execute-action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tabId": "tab_1234567890_abc123",
+    "action": "createShape", 
+    "args": [{"x": 100, "y": 100, "width": 50, "height": 50, "fillColor": "#ff0000"}]
+  }'
+```
+
+### Ver pestañas activas
+
+```bash
+curl http://localhost:3000/api/tabs
+```
+
+## 🎯 Acciones OBR Disponibles
+
+- `createShape(options)` - Crear formas
+- `createText(text, x, y, options)` - Crear texto  
+- `moveItems(itemIds, deltaX, deltaY)` - Mover elementos
+- `deleteItems(itemIds)` - Eliminar elementos
+
+## 🤖 Chat con IA
+
+El frontend se conecta a Gradio en `http://localhost:7860` para procesar mensajes de chat.
+
+## 📝 Ejemplo de Servicio Externo (Python)
+
+```python
+import requests
+
+# Ejecutar acción en pestaña específica
+response = requests.post('http://localhost:3000/api/execute-action', json={
+    'tabId': 'tab_1234567890_abc123',
+    'action': 'createShape',
+    'args': [{'x': 200, 'y': 200, 'width': 100, 'height': 100, 'fillColor': '#00ff00'}]
+})
+
+print(response.json())
+```
 
 - 🏰 **Medieval Theme**: Authentic old parchment background with medieval fonts
 - 📜 **No Message Boxes**: Clean text display without modern chat bubbles
