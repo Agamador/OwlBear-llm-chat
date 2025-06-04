@@ -1,8 +1,8 @@
-import { setupServiceWorker } from './api/service-worker-client.js';
 import './style.css';
+import { setupWebSocketConnection } from './websocket-client.js';
 
 // Inicializar Service Worker
-setupServiceWorker();
+setupWebSocketConnection();
 
 document.querySelector('#app').innerHTML = `
   <div class="chat-container">
