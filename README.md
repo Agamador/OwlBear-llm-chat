@@ -1,6 +1,6 @@
-# OwlBear LLM Chat
+# OwlBear LLM Chat con OBR Actions
 
-A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, featuring authentic parchment styling and medieval fonts. Designed for integration with external APIs and LLM services.
+A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, featuring authentic parchment styling and medieval fonts. Designed for integration with external APIs, LLM services, and Owlbear Rodeo (OBR) actions.
 
 ## Features
 
@@ -9,6 +9,28 @@ A medieval-themed D&D chat interface built with Vite and vanilla JavaScript, fea
 - ⚔️ **D&D Style**: Dungeon Master and Player roles with distinctive styling
 - 🎨 **Custom Typography**: Medieval fonts including Cinzel, Berkshire Swash, and Metamorphous
 - 🌐 **API Integration**: POST request functionality for external chat services
+- 🎯 **OBR Actions**: Endpoints para ejecutar acciones en Owlbear Rodeo
+
+## Estructura del proyecto
+
+- **Frontend**: Aplicación Vite con interfaz de chat (Puerto 5173)
+- **Backend**: Servidor Express con endpoints para acciones de OBR (Puerto 3001)
+
+## Scripts disponibles
+
+- `npm run dev` - Ejecuta solo el frontend (Vite)
+- `npm run server` - Ejecuta solo el servidor backend
+- `npm run dev:full` - Ejecuta tanto frontend como backend simultáneamente
+
+## Endpoints disponibles
+
+### Health Check
+- **GET** `http://localhost:3001/health` - Verifica que el servidor esté funcionando
+
+### OBR Actions
+- **POST** `http://localhost:3001/obr-action` - Endpoint para ejecutar acciones en OBR
+  - **Estado**: Estructura básica creada, lógica pendiente de implementar
+  - **Formato**: JSON con los datos de la acción a ejecutar
 - 🪶 **Elegant UI**: Embedded send button with quill emoji and medieval styling
 - ⚡ **Lightweight**: Minimal dependencies with pure vanilla JavaScript
 
