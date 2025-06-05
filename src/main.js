@@ -1,9 +1,21 @@
 import './style.css';
+import { obrAPI, setupWebSocketConnection } from './websocket-client.js';
+
+// Inicializar
+setupWebSocketConnection();
 
 document.querySelector('#app').innerHTML = `
   <div class="chat-container">
     <div class="chat-header">
-      <h2>Chat</h2>
+      <h2>CHAT</h2>
+      <div class="info-icon" id="info-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        <div class="info-tooltip" id="info-tooltip">
+          Tab ID: ${obrAPI.getTabId()}
+        </div>
+      </div>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="message incoming">
@@ -16,96 +28,42 @@ document.querySelector('#app').innerHTML = `
       <button id="send-button" aria-label="Send message">🪶</button>
     </div>
   </div>
-`
+`;
 
-// Setup chat functionality
-const messageInput = document.querySelector('#message-input');
-const sendButton = document.querySelector('#send-button');
-const chatMessages = document.querySelector('#chat-messages');
-
-function addMessage(content, senderName, isOutgoing = true) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
-
-  messageDiv.innerHTML = `
-    <div class="message-sender">${senderName}</div>
-    <div class="message-content">${content}</div>
-  `;
-
-  chatMessages.appendChild(messageDiv);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-
-  // Return the element so it can be removed if needed
-  return messageDiv;
-}
+// Event listeners
+document.getElementById('send-button').addEventListener('click', sendMessage);
+document.getElementById('message-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
 
 async function sendMessage() {
-  const content = messageInput.value.trim();
+  const content = document.getElementById('message-input').value.trim();
   if (content) {
     // Add player message to chat
     addMessage(content, "Player", true);
-    messageInput.value = '';    // Add medieval loading indicator
-    const loadingMessages = [
-      "🔮 The Dungeon Master consults the ancient scrolls...",
-      "⚡ Arcane energies swirl through the ethereal plane...",
-      "📜 Deciphering the mystical runes...",
-      "🌟 The crystal ball reveals hidden knowledge...",
-      "⚔️ Summoning wisdom from the realm of shadows...",
-      "🧙‍♂️ Channeling the power of the arcane...",
-      "🌙 The spirits whisper their secrets...",
-      "💫 Consulting the celestial archives...",
-      "🏰 Searching the great library of ages...",
-      "🕯️ Invoking the ancient rituals...",
-      "⚖️ Weighing the scales of destiny...",
-      "🗝️ Unlocking forbidden knowledge...",
-      "🌿 Gathering wisdom from the forest druids...",
-      "🦉 The wise owl brings tidings...",
-      "🃏 Drawing cards from the deck of fate...",
-      "🧪 Brewing insights in the alchemical cauldron...",
-      "👁️ The all-seeing eye opens...",
-      "🌊 Diving into the depths of memory...",
-      "🔥 Stoking the flames of inspiration...",
-      "❄️ Consulting the ice-bound prophecies...",
-      "🍄 The mushroom circle reveals its secrets...",
-      "🦄 A unicorn shares its divine wisdom...",
-      "🐉 The ancient dragon stirs from slumber...",
-      "⭐ Aligning with the cosmic forces..."
-    ];
-    const randomLoadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-    const loadingMessageElement = addMessage(randomLoadingMessage, "Dungeon Master", false);
-    loadingMessageElement.classList.add('loading-message');
+    document.getElementById('message-input').value = '';
+
+    // Add medieval loading indicator
+    const loadingMessageElement = showLoadingMessage();
 
     // Add loading animation to send button
+    const sendButton = document.getElementById('send-button');
     sendButton.disabled = true;
     sendButton.style.animation = "medievalPulse 1s infinite";
     sendButton.setAttribute('aria-label', 'Communing with the spirits...');
 
-    try {      // Make POST request to backend API
-      const response = await fetch('http://localhost:3000/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: content,
-          user: "Player"
-        })
-      });
-      // Wait for the response from the server
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    try {
+      // Use external service through WebSocket
+      const response = await obrAPI.callExternalService(content);
+
       // Remove loading message
       loadingMessageElement.remove();
 
-      if (response.ok) {
-        const data = await response.json();
-        // Add response from API as Dungeon Master message
-        addMessage(data.response || data.message || "No response received", "Dungeon Master", false);
-      } else {
-        // Handle API error
-        addMessage("The mystical connection has been disrupted. Please try again.", "Dungeon Master", false);
-      }
+      // Add response from external service as Dungeon Master message
+      addMessage(response, "Dungeon Master", false);
+
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error calling external service:', error);
       // Remove loading message on error
       loadingMessageElement.remove();
       // Add error message as Dungeon Master response
@@ -119,9 +77,52 @@ async function sendMessage() {
   }
 }
 
-sendButton.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    sendMessage();
-  }
-});
+function addMessage(content, senderName, isOutgoing = true) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
+
+  messageDiv.innerHTML = `
+    <div class="message-sender">${senderName}</div>
+    <div class="message-content">${content}</div>
+  `;
+
+  const chatMessages = document.getElementById('chat-messages');
+  chatMessages.appendChild(messageDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Return the element so it can be removed if needed
+  return messageDiv;
+}
+
+function showLoadingMessage() {
+  const loadingMessages = [
+    "🔮 The Dungeon Master consults the ancient scrolls...",
+    "⚡ Arcane energies swirl through the ethereal plane...",
+    "📜 Deciphering the mystical runes...",
+    "🌟 The crystal ball reveals hidden knowledge...",
+    "⚔️ Summoning wisdom from the realm of shadows...",
+    "🧙‍♂️ Channeling the power of the arcane...",
+    "🌙 The spirits whisper their secrets...",
+    "💫 Consulting the celestial archives...",
+    "🏰 Searching the great library of ages...",
+    "🕯️ Invoking the ancient rituals...",
+    "⚖️ Weighing the scales of destiny...",
+    "🗝️ Unlocking forbidden knowledge...",
+    "🌿 Gathering wisdom from the forest druids...",
+    "🦉 The wise owl brings tidings...",
+    "🃏 Drawing cards from the deck of fate...",
+    "🧪 Brewing insights in the alchemical cauldron...",
+    "👁️ The all-seeing eye opens...",
+    "🌊 Diving into the depths of memory...",
+    "🔥 Stoking the flames of inspiration...",
+    "❄️ Consulting the ice-bound prophecies...",
+    "🍄 The mushroom circle reveals its secrets...",
+    "🦄 A unicorn shares its divine wisdom...",
+    "🐉 The ancient dragon stirs from slumber...",
+    "⭐ Aligning with the cosmic forces..."
+  ];
+  const randomLoadingMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+  const loadingMessageElement = addMessage(randomLoadingMessage, "Dungeon Master", false);
+  loadingMessageElement.classList.add('loading-message');
+  return loadingMessageElement;
+}

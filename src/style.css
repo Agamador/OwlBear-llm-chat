@@ -51,6 +51,9 @@ body {
     inset 0 2px 4px rgba(139, 69, 19, 0.2),
     0 4px 8px rgba(0, 0, 0, 0.2);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-header h2 {
@@ -58,6 +61,74 @@ body {
   font-size: 1.4rem;
   font-weight: bold;
   letter-spacing: 2px;
+}
+
+.info-icon {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #4a2c17;
+  transition: color 0.3s ease;
+}
+
+.info-icon:hover {
+  color: #8b4513;
+}
+
+.info-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(244, 232, 208, 0.95);
+  color: #4a2c17;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #8b4513;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  width: auto;
+  min-width: 120px;
+  max-width: 200px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  text-align: left;
+  font-family: monospace;
+}
+
+.info-icon:hover .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(5px);
+}
+
+/* Estado OBR */
+.obr-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85em;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  border: 1px solid #d4af37;
+}
+
+.status-indicator {
+  font-size: 1.2em;
+  transition: color 0.3s ease;
+}
+
+#status-text {
+  font-weight: 500;
+  color: #4a3728;
 }
 
 .chat-messages {
@@ -142,6 +213,15 @@ body {
   text-align: right;
 }
 
+/* Mensaje del sistema */
+.system-message .message-content {
+  background: linear-gradient(135deg, #e8dcc6 0%, #d4c5a9 100%);
+  border: 2px solid #d4af37;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* Medieval loading animations */
 @keyframes medievalPulse {
   0% {
@@ -214,26 +294,67 @@ body {
 /* Loading message special styling */
 .loading-message .message-content {
   font-style: italic;
-  color: #8b4513;
-  animation: shimmerText 1.5s infinite;
-  opacity: 1;
+  color: #8b4513 !important;
   font-weight: 500;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%) !important;
   border-left: 3px solid #d4af37;
   padding: 0.75rem 1rem;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   font-size: 1.05rem;
+  position: relative;
+  /* Aplicar animación directamente */
+  animation:
+    pulseLoading 1.5s ease-in-out infinite,
+    fadeInMessage 0.3s ease-out;
 }
 
 /* Special styling for loading message sender */
 .loading-message .message-sender {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(255, 215, 0, 0.2) 100%);
-  border: 2px solid #d4af37;
-  color: #8b4513;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(255, 215, 0, 0.2) 100%) !important;
+  border: 2px solid #d4af37 !important;
+  color: #8b4513 !important;
   font-weight: bolder;
   text-shadow: 0 1px 2px rgba(212, 175, 55, 0.5);
   animation: fadeInMessage 0.3s ease-out;
+}
+
+.loading-message .message-content::after {
+  content: "⏳";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: spin 2s linear infinite;
+}
+
+/* Animación de rotación para el ícono de carga */
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* Animación pulsante mejorada */
+@keyframes pulseLoading {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+  }
 }
 
 /* Pulsing border animation for loading messages */
@@ -270,10 +391,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.loading-message {
-  animation: fadeInMessage 0.3s ease-out;
 }
 
 /* Disabled send button styling */
@@ -354,4 +471,38 @@ body {
 #send-button:active {
   transform: translateY(-50%) scale(0.95);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón de prueba OBR */
+#obr-test-button {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #d4af37;
+  background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+  color: #d4af37;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#obr-test-button:hover {
+  transform: translateY(-50%) scale(1.1);
+  background: linear-gradient(135deg, #a0522d 0%, #8b4513 100%);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+#obr-test-button:active {
+  transform: translateY(-50%) scale(0.95);
 }
