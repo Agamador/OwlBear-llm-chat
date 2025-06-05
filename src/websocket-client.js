@@ -67,6 +67,17 @@ class SimpleChat {
     // Chat con IA en Gradio
     async sendChatMessage(message) {
         try {
+            // Obtener el estado del juego usando la función de obr-actions
+            const gameStateResult = await executeAction('getGameState');
+            let gameStateString = '';
+
+            if (gameStateResult.success) {
+                // Convertir el gameState a string JSON formateado
+                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);
+                // Combinar mensaje con gameState
+                message = `${message}\n\n--- GAME STATE ---\n${gameStateString}`;
+            }
+
             const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
