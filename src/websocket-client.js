@@ -11,14 +11,15 @@ class SimpleChat {
     setupExternalActions() {
         const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
-            console.log('📨 Mensaje recibido:', event.data);
-
+            if (event.data == `{"type":"ping"}`) {
+                console.log('📨 Mensaje recibido:', event.data);
+            }
             try {
                 const data = JSON.parse(event.data);
 
                 // Ignorar pings
                 if (data.type === 'ping') {
-                    console.log('🏓 Ping recibido');
+                    //console.log('🏓 Ping recibido');
                     return;
                 }
 
@@ -56,6 +57,7 @@ class SimpleChat {
 
             const result = await executeAction(action, ...args);
             console.log('✅ Acción completada:', result);
+            await executeAction('notify', result)
             return result;
         } catch (error) {
             console.log(error);

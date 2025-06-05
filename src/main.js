@@ -15,6 +15,7 @@ document.querySelector('#app').innerHTML = `
         <div class="info-tooltip" id="info-tooltip">
           Tab ID: ${obrAPI.getTabId()}
         </div>
+      <button id="clear-button" aria-label="Test action">🗑️</button>
       </div>
     </div>
     <div class="chat-messages" id="chat-messages">
@@ -29,7 +30,10 @@ document.querySelector('#app').innerHTML = `
     </div>
   </div>
 `;
+//testing actions
+document.getElementById('clear-button').addEventListener('click', async () => {
 
+})
 // Event listeners
 document.getElementById('send-button').addEventListener('click', sendMessage);
 document.getElementById('message-input').addEventListener('keypress', (e) => {

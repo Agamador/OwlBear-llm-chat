@@ -63,58 +63,39 @@ export async function getGameState() {
         };
     }
 }
-
-// Crear texto
-export async function createText(text, x, y, options = {}) {
-    const textItem = await OBR.scene.items.addItems([{
-        id: `text_${Date.now()}`,
-        type: 'TEXT',
-        position: { x, y },
-        text,
-        style: { fontSize: options.fontSize || 16, color: options.color || '#000000' },
-        layer: 'TEXT'
-    }]);
-
-    return { success: true, itemId: textItem[0].id };
+//Notificar sala
+export async function notify(message, mode = "SUCCESS") {
+    if (typeof message != 'string') {
+        message = JSON.stringify(message, null, 2);
+    }
+    console.log('Ale, ', message.length)
+    if (message.length > 253) {
+        const begin = message.substring(0, 253) + '...';
+        const continuation = message.substring(256);
+        OBR.notification.show(begin, mode)
+        setTimeout(() => { this.notify(continuation, mode); }, 2000)
+    }
+    else OBR.notification.show(message, mode)
 }
 
-// Mover elementos
-export async function moveItems(itemIds, deltaX, deltaY) {
-    await OBR.scene.items.updateItems(itemIds, (items) => {
-        items.forEach(item => {
-            item.position.x += deltaX;
-            item.position.y += deltaY;
-        });
-    });
+export async function getRoomMetadata() {
+    return OBR.room.getMetadata();
+}
+
+export async function setRoomMetadata(metadata) {
+    if (typeof metadata !== 'object' || metadata === null) {
+        throw new Error('Metadata debe ser un objeto');
+    }
+    await OBR.room.setMetadata(metadata);
     return { success: true };
 }
 
-// Eliminar elementos
-export async function deleteItems(itemIds) {
-    await OBR.scene.items.deleteItems(itemIds);
-    return { success: true };
-}
 
-// Ejecutor principal
-export async function executeAction(actionName, ...args) {
-    const actions = { createShape, createText, moveItems, deleteItems, getGameState };
+const actions = {
+    createShape,
+    getGameState,
+    notify,
+    getRoomMetadata,
+    setRoomMetadata,
+};
 
-    if (!actions[actionName]) {
-        throw new Error(`Acción '${actionName}' no encontrada`);
-    }
-
-    if (!OBR.isAvailable) {
-        throw new Error('OBR no disponible');
-    }
-
-    return new Promise((resolve, reject) => {
-        OBR.onReady(async () => {
-            try {
-                const result = await actions[actionName](...args);
-                resolve(result);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    });
-}
