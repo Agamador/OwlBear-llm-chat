@@ -1,7 +1,5 @@
 // 🚀 CHAT SIMPLIFICADO
 import { executeAction } from './obr/obr-actions.js';
-import OBR from '@owlbear-rodeo/sdk';
-import { Client } from "@gradio/client";
 
 class SimpleChat {
     constructor() {
@@ -134,7 +132,8 @@ export const obrAPI = {
     }
 };
 
-// Setup simplificado (ya no necesita inicialización asíncrona)
+// Setup simplif
+// icado (ya no necesita inicialización asíncrona)
 export function setupWebSocketConnection() {
     console.log('✅ Chat listo, TabId:', simpleChat.tabId);
 }
