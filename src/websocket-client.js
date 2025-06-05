@@ -72,7 +72,7 @@ class SimpleChat {
             const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [message] })
+                body: JSON.stringify({ data: [message, this.tabId] })
             });
 
             const result = await response.json();
@@ -122,7 +122,8 @@ export const obrAPI = {
         return await simpleChat.sendChatMessage(message);
     },
 
-    // Ejecutar acción OBR
+    // Ejecutar acción OBR 
+    // Parece que no se usa más, pero lo dejamos por compatibilidad
     async executeOBRAction(action, ...args) {
         return await simpleChat.executeOBRAction(action, args);
     },
