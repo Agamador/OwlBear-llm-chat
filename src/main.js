@@ -41,6 +41,7 @@ async function sendMessage() {
     const response = await obrAPI.callExternalService(message);
     addMessage('IA', response);
   } catch (error) {
+    console.error(error);
     addMessage('Error', 'No se pudo conectar con la IA: ' + error.message);
   }
 }

@@ -1,6 +1,7 @@
 // 🚀 CHAT SIMPLIFICADO
 import { executeAction } from './obr/obr-actions.js';
 import OBR from '@owlbear-rodeo/sdk';
+import { Client } from "@gradio/client";
 
 class SimpleChat {
     constructor() {
@@ -85,21 +86,30 @@ class SimpleChat {
     }
 
     async waitForResponse(eventId) {
-        for (let i = 0; i < 15; i++) {
-            try {
-                const response = await fetch(`http://localhost:7860/gradio_api/call/predict/${eventId}`);
-                const data = await response.json();
+        return new Promise((resolve, reject) => {
+            const es = new EventSource(`http://localhost:7860/gradio_api/call/predict/${eventId}`, { withCredentials: false });
 
-                if (data.status === 'complete') return data.data;
-                if (data.status === 'error') throw new Error('Error en IA');
+            es.addEventListener('complete', (event) => {
+                const result = JSON.parse(event.data)[0];
+                es.close(); // Cerrar el EventSource
+                resolve(result); // Resolver la promesa con el resultado
+            });
 
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            } catch (error) {
-                if (i === 14) throw new Error('Timeout esperando respuesta de IA');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-        }
+            es.addEventListener('error', (error) => {
+                es.close();
+                reject(error); // Rechazar la promesa en caso de error
+            });
+        });
     }
+
+    // Util cuando este desplegada en un space de huggingface
+    // async sendChatMessage(message) {
+    //     const app = new Client('http://localhost:7860',);
+    //     console.log('📬 Enviando mensaje a IA:', message);
+    //     const result = await app.predict("/gradio_api/call/predict",[message]);
+    //     console.log('📬 Mensaje enviado a IA, respuesta:', result)
+    //     return result;
+    // }
 }
 
 // Instancia global
