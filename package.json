@@ -2,10 +2,10 @@
   "name": "obr-chat-simple",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
-  "scripts": {
+  "type": "module",  "scripts": {
     "dev": "vite",
     "server": "node server.js",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\" --names \"SERVER,VITE\" --prefix-colors \"blue,green\"",
     "build": "vite build"
   },
   "dependencies": {
@@ -16,6 +16,7 @@
     "obr-chat-simple": "file:"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "vite": "^6.3.5"
   }
 }
