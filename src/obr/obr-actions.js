@@ -3,7 +3,7 @@ import OBR, { buildShape } from "@owlbear-rodeo/sdk";
 
 // Crear formas
 export async function createShape(options) {
-    const { x = 0, y = 0, width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000' } = options;
+    const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000' } = options;
     console.log('Crear forma con opciones:', options);
 
     const item = buildShape()
@@ -13,11 +13,9 @@ export async function createShape(options) {
         .fillColor(fillColor)
         .build();
 
-    const shape = await OBR.scene.items.addItems([item]);
+    await OBR.scene.items.addItems([item]);
 
-    console.log('Forma creada:', shape);
-
-    return { success: true, itemId: shape[0].id };
+    return { success: true, itemId: item.id };
 }
 
 // Crear texto
