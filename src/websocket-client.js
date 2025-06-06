@@ -11,6 +11,7 @@ class SimpleChat {
     setupExternalActions() {
         const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
+            // Solo aparezca en dev
             if (event.data == `{"type":"ping"}`) {
                 console.log('📨 Mensaje recibido:', event.data);
             }
@@ -56,8 +57,9 @@ class SimpleChat {
             }
 
             const result = await executeAction(action, ...args);
+            //estos dos logs que solo vayan en dev
             console.log('✅ Acción completada:', result);
-            await executeAction('notify', result)
+            await executeAction('notify', result);
             return result;
         } catch (error) {
             console.log(error);
@@ -69,6 +71,10 @@ class SimpleChat {
     // Chat con IA en Gradio
     async sendChatMessage(message) {
         try {
+            let roomMetadata = await executeAction('getRoomMetadata');
+            let history = roomMetadata.history || [];
+            history.push({ role: 'user', content: message });
+
             // Obtener el estado del juego usando la función de obr-actions
             const gameStateResult = await executeAction('getGameState');
             let gameStateString = '';
@@ -83,14 +89,20 @@ class SimpleChat {
             const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [message, this.tabId] })
+                body: JSON.stringify({ data: [history, this.tabId] })
             });
 
             const result = await response.json();
             const eventId = result.event_id;
 
             // Esperar respuesta
-            return await this.waitForResponse(eventId);
+            const agentMessage = await this.waitForResponse(eventId);
+            history.push({ role: 'assistant', content: agentMessage });
+
+            roomMetadata.history = history;
+            await executeAction('setRoomMetadata', roomMetadata);
+
+            return agentMessage;
         } catch (error) {
             throw new Error('Error conectando con IA: ' + error.message);
         }
