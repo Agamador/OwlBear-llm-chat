@@ -1,9 +1,9 @@
 {
-    "name": "Hello, World!",
+    "name": "LLM Game Master",
     "version": "1.0.0",
     "manifest_version": 1,
     "action": {
-        "title": "Hello, World!",
+        "title": "LLM Game Master",
         "icon": "/icon.svg",
         "popover": "/",
         "height": 600,
