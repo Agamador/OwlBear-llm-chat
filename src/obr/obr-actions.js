@@ -5,7 +5,7 @@ import OBR, { buildImage, buildLight, buildShape } from "@owlbear-rodeo/sdk";
 export async function createShape(options) {
     try {
         const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000', strokeColor = '#ff0000' } = options;
-
+        console.log('Creating shape with options:', width, height, shapeType, fillColor, strokeColor);
         const item = buildShape()
             .width(width)
             .height(height)

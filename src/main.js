@@ -329,7 +329,7 @@ document.getElementById('test-button').addEventListener('click', async () => {
   setTimeout(async () => {
     await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 450, y: 450 });
   }, 2000); // Wait before moving
-  await obrAPI.executeOBRAction('delteItem', { id: tokenId });
+  await obrAPI.executeOBRAction('deleteItem', { id: tokenId });
   await obrAPI.executeOBRAction('startRoom')
   await obrAPI.executeOBRAction('animateViewport', [tokenId]);
 })
