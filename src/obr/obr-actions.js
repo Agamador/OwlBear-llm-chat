@@ -200,6 +200,40 @@ export async function move_token(options) {
     }
 }
 
+/**
+ * Deletes tokens from the scene
+ * @param {Object} options - Delete options
+ * @param {string|string[]} options.ids - ID or array of IDs of items to delete
+ * @returns {Promise<Object>} - Success status
+ */
+export async function delete_token(options) {
+    try {
+        // Validate required parameters
+        const { ids } = options;
+
+        if (!ids) {
+            throw new Error("Missing required parameter: ids");
+        }
+
+        // Convert single ID to array if needed
+        const idsArray = Array.isArray(ids) ? ids : [ids];
+
+        if (idsArray.length === 0) {
+            throw new Error("No IDs provided for deletion");
+        }
+
+        console.log('Deleting tokens with IDs:', idsArray);
+
+        // Delete the items
+        await OBR.scene.items.deleteItems(idsArray);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting tokens:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // No se puede usar el spread ...args, porque mete en un array los argumentos
 // Si da fallo con otra tool habrá que modificar como se pasan según la tool
 export async function executeAction(actionName, args) {
@@ -232,5 +266,6 @@ const actions = {
     setRoomMetadata,
     createVector2,
     create_token,
-    move_token
+    move_token,
+    delete_token
 };
