@@ -89,7 +89,7 @@ class SimpleChat {
             const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [message, this.tabId] })
+                body: JSON.stringify({ data: [history, this.tabId] })
             });
 
             const result = await response.json();
