@@ -9,7 +9,8 @@ class SimpleChat {
 
     // Escuchar acciones desde servicios externos
     setupExternalActions() {
-        const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
+        const apiUrl = process.env.SERVER_URL || 'http://localhost:3000';
+        const eventSource = new EventSource(`${apiUrl}/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
             // Solo aparezca en dev
             if (event.data == `{"type":"ping"}`) {
@@ -81,12 +82,12 @@ class SimpleChat {
 
             if (gameStateResult.success) {
                 // Convertir el gameState a string JSON formateado
-                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);
-                // Combinar mensaje con gameState
+                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);            // Combinar mensaje con gameState
                 message = `${message}\n\n--- GAME STATE ---\n${gameStateString}`;
             }
 
-            const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
+            const gradioUrl = process.env.GRADIO_URL || 'http://localhost:7860';
+            const response = await fetch(`${gradioUrl}/gradio_api/call/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: [history, this.tabId] })
@@ -109,8 +110,9 @@ class SimpleChat {
     }
 
     async waitForResponse(eventId) {
+        const gradioUrl = process.env.GRADIO_URL || 'http://localhost:7860';
         return new Promise((resolve, reject) => {
-            const es = new EventSource(`http://localhost:7860/gradio_api/call/predict/${eventId}`, { withCredentials: false });
+            const es = new EventSource(`${gradioUrl}/gradio_api/call/predict/${eventId}`, { withCredentials: false });
 
             es.addEventListener('complete', (event) => {
                 const result = JSON.parse(event.data)[0];
@@ -127,7 +129,8 @@ class SimpleChat {
 
     // Util cuando este desplegada en un space de huggingface
     // async sendChatMessage(message) {
-    //     const app = new Client('http://localhost:7860',);
+    //     const gradioUrl = process.env.VITE_GRADIO_URL || 'http://localhost:7860';
+    //     const app = new Client(gradioUrl);
     //     console.log('📬 Enviando mensaje a IA:', message);
     //     const result = await app.predict("/gradio_api/call/predict",[message]);
     //     console.log('📬 Mensaje enviado a IA, respuesta:', result)

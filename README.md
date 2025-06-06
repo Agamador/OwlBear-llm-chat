@@ -14,6 +14,25 @@ Este sistema permite:
 npm install
 ```
 
+## 🌐 Configuración de Variables de Entorno
+
+La aplicación utiliza variables de entorno para configurar puertos, hosts y URLs de servicios. Copia el archivo `.env.example` a `.env` y personaliza las variables según tu entorno:
+
+```bash
+cp .env.example .env
+# Edita el archivo .env según tus necesidades
+```
+
+### Variables disponibles:
+
+- `SERVER_PORT`: Puerto del servidor Express (predeterminado: 3000)
+- `SERVER_HOST`: Host del servidor Express (predeterminado: localhost)
+- `VITE_PORT`: Puerto del servidor Vite (predeterminado: 5173)
+- `VITE_HOST`: Host del servidor Vite (predeterminado: 0.0.0.0)
+- `VITE_API_URL`: URL del API del servidor (predeterminado: http://localhost:3000)
+- `VITE_GRADIO_URL`: URL del servicio Gradio (predeterminado: http://localhost:7860)
+- `NODE_ENV`: Entorno de ejecución (development/production)
+
 ## ▶️ Uso
 
 ### 1. Iniciar servidor de comunicación
@@ -26,19 +45,49 @@ npm run server
 npm run dev
 ```
 
-### 3. Abrir en Owlbear Rodeo
+### 3. Iniciar todo a la vez
+```bash
+npm run dev:full
+```
+
+### 4. Abrir en Owlbear Rodeo
 - Cargar la URL de Vite en OBR como extensión
 - Cada pestaña tendrá un ID único
+
+## 🤖 Servicio Systemd (Inicio Automático)
+
+La aplicación está configurada para iniciarse automáticamente cuando se enciende la máquina mediante un servicio systemd.
+
+### Ver estado del servicio
+```bash
+sudo systemctl status owlbear-chat.service
+```
+
+### Iniciar/Detener/Reiniciar el servicio
+```bash
+sudo systemctl start owlbear-chat.service
+sudo systemctl stop owlbear-chat.service
+sudo systemctl restart owlbear-chat.service
+```
+
+### Deshabilitar inicio automático
+```bash
+sudo systemctl disable owlbear-chat.service
+```
+
+### Ver logs del servicio
+```bash
+sudo journalctl -u owlbear-chat.service
+```
 
 ## 🔌 API para Servicios Externos
 
 ### Ejecutar acción OBR en una pestaña específica
 
 ```bash
-curl -X POST http://localhost:3000/api/execute-action \
+curl -X POST http://localhost:3000/execute/tab_1234567890_abc123 \
   -H "Content-Type: application/json" \
   -d '{
-    "tabId": "tab_1234567890_abc123",
     "action": "createShape", 
     "args": [{"x": 100, "y": 100, "width": 50, "height": 50, "fillColor": "#ff0000"}]
   }'
@@ -47,7 +96,7 @@ curl -X POST http://localhost:3000/api/execute-action \
 ### Ver pestañas activas
 
 ```bash
-curl http://localhost:3000/api/tabs
+curl http://localhost:3000/tabs
 ```
 
 ## 🎯 Acciones OBR Disponibles
