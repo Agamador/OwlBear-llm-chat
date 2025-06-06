@@ -32,7 +32,16 @@ document.querySelector('#app').innerHTML = `
 `;
 //testing actions
 document.getElementById('clear-button').addEventListener('click', async () => {
-
+  const options = {
+    name: "Knight",
+    imageUrl: "http://localhost:5173/src/assets/knight1.png",
+    x: 100,
+    y: 100,
+    layer: "CHARACTER",
+    width: 420,
+    height: 420
+  }
+  obrAPI.executeOBRAction('create_token', options)
 })
 // Event listeners
 document.getElementById('send-button').addEventListener('click', sendMessage);
