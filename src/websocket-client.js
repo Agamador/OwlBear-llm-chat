@@ -56,8 +56,9 @@ class SimpleChat {
             }
 
             const result = await executeAction(action, ...args);
+            //estos dos logs que solo vayan en dev
             console.log('✅ Acción completada:', result);
-            await executeAction('notify', result)
+            await executeAction('notify', result);
             return result;
         } catch (error) {
             console.log(error);
