@@ -11,6 +11,7 @@ class SimpleChat {
     setupExternalActions() {
         const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
+            // Solo aparezca en dev
             if (event.data == `{"type":"ping"}`) {
                 console.log('📨 Mensaje recibido:', event.data);
             }
