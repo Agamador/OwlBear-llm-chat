@@ -1,5 +1,6 @@
 // 🚀 CHAT SIMPLIFICADO
 import { executeAction } from './obr/obr-actions.js';
+import { Client } from '@gradio/client';
 
 class SimpleChat {
     constructor() {
@@ -60,24 +61,22 @@ class SimpleChat {
             const result = await executeAction(action, ...args);
             //estos dos logs que solo vayan en dev
             console.log('✅ Acción completada:', result);
-            await executeAction('notify', result);
+            //await executeAction('notify', result);
             return result;
         } catch (error) {
             console.log(error);
             console.error('❌ Error ejecutando acción:', error);
             throw error;
         }
-    }
-
-    // Chat con IA en Gradio
-    async sendChatMessage(message) {
+    }    // Chat con IA en Gradio
+    async sendChatMessage(message, apiKey) {
         try {
-            let roomMetadata = await executeAction('getRoomMetadata');
+            let roomMetadata = await this.executeOBRAction('getRoomMetadata');
             let history = roomMetadata.history || [];
             history.push({ role: 'user', content: message });
 
             // Obtener el estado del juego usando la función de obr-actions
-            const gameStateResult = await executeAction('getGameState');
+            const gameStateResult = await this.executeOBRAction('getGameState');
             let gameStateString = '';
 
             if (gameStateResult.success) {
@@ -87,21 +86,34 @@ class SimpleChat {
             }
 
             const gradioUrl = process.env.GRADIO_URL || 'http://localhost:7860';
-            const response = await fetch(`${gradioUrl}/gradio_api/call/predict`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [history, this.tabId] })
-            });
+            let agentMessage = '';
+            if (!gradioUrl.includes('localhost')) {
+                const client = await Client.connect(gradioUrl);
+                const response = await client.predict("/predict", {
+                    history: history,
+                    tab_id: this.tabId,
+                    anthropic_api_key: apiKey,
+                });
+                agentMessage = response.data[0]; // Asumiendo que la respuesta es un array con el mensaje
+            } else {
+                const response = await fetch(`${gradioUrl}/gradio_api/call/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: [history, this.tabId, apiKey] })
+                });
 
-            const result = await response.json();
-            const eventId = result.event_id;
+                const result = await response.json();
+                const eventId = result.event_id;
 
-            // Esperar respuesta
-            const agentMessage = await this.waitForResponse(eventId);
+                // Esperar respuesta
+                agentMessage = await this.waitForResponse(eventId);
+            }
             history.push({ role: 'assistant', content: agentMessage });
 
             roomMetadata.history = history;
-            await executeAction('setRoomMetadata', roomMetadata);
+            await this.executeOBRAction('setRoomMetadata', roomMetadata);
 
             return agentMessage;
         } catch (error) {
@@ -144,8 +156,8 @@ const simpleChat = new SimpleChat();
 // API simplificada
 export const obrAPI = {
     // Chat con IA
-    async callExternalService(message) {
-        return await simpleChat.sendChatMessage(message);
+    async callExternalService(message, apiKey) {
+        return await simpleChat.sendChatMessage(message, apiKey);
     },
 
     // Ejecutar acción OBR 

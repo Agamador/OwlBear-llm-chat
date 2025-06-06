@@ -5,12 +5,36 @@ import { obrAPI, setupWebSocketConnection } from './websocket-client.js';
 setupWebSocketConnection();
 
 document.querySelector('#app').innerHTML = `
-  <div class="chat-container">
+  <!-- Vista para introducir la API key de Anthropic -->
+  <div class="api-key-container" id="api-key-view">
+    <div class="api-key-header">
+      <h2>🔑 API KEY SETUP</h2>
+    </div>
+    <div class="api-key-content">
+      <div class="api-key-icon">🧙‍♂️</div>
+      <h3>Bienvenido, Maestro de Calabozos</h3>
+      <p>Para empezar a usar la IA, necesitas proporcionar tu API Key de Anthropic</p>
+      
+      <div class="api-key-input-container">
+        <input type="password" id="api-key-input" 
+          placeholder="Anthropic API KEY" 
+          autocomplete="off" />
+      </div>
+      <div class="api-key-message" id="api-key-message"></div>
+      
+      <button id="validate-api-key-button" class="api-key-button">
+        Validar y Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- Vista del chat -->  <div class="chat-container" id="chat-view" style="display: none;">
     <div class="chat-header">
-      <button id="clear-button" aria-label="Test action">⚡</button>
+      <button id="test-button" class="top-icon-button" aria-label="Test action">⚡</button>
       <h2>CHAT</h2>
       <div class="header-buttons">
-        <button id="clear-history-button" aria-label="Clear chat history" title="Clear chat history">🗑️</button>
+        <button id="clear-history-button" class="top-icon-button" aria-label="Clear chat history" title="Clear chat history">🗑️</button>
+        <button id="change-api-key-button" class="top-icon-button" aria-label="Change API Key" title="Change API Key">🔑</button>
         <div class="info-icon" id="info-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
@@ -50,7 +74,144 @@ document.querySelector('#app').innerHTML = `
 `;
 
 // Cargar historial del chat al inicializar
-loadChatHistory();
+checkApiKeyAndInitialize();
+
+// Función para verificar si ya hay una API key guardada y decidir qué vista mostrar
+async function checkApiKeyAndInitialize() {
+  try {
+    // Obtener metadatos de la sala
+    const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
+
+    // Verificar si existe una API key guardada
+    if (roomMetadata && roomMetadata.anthropicApiKey) {
+      // Si hay una API key, mostrar la vista del chat
+      document.getElementById('api-key-view').style.display = 'none';
+      document.getElementById('chat-view').style.display = 'flex';
+
+      // Cargar el historial del chat
+      loadChatHistory();
+    } else {
+      // Si no hay API key, mostrar la vista para configurarla
+      document.getElementById('api-key-view').style.display = 'flex';
+      document.getElementById('chat-view').style.display = 'none';
+
+      // Configurar eventos para la vista de API key
+      setupApiKeyView();
+    }
+  } catch (error) {
+    console.error('Error al verificar API key:', error);
+    // En caso de error, mostrar la vista para configurar la API key
+    document.getElementById('api-key-view').style.display = 'flex';
+    document.getElementById('chat-view').style.display = 'none';
+
+    // Configurar eventos para la vista de API key
+    setupApiKeyView();
+  }
+}
+
+// Configurar eventos para la vista de API key
+function setupApiKeyView() {
+  const apiKeyInput = document.getElementById('api-key-input');
+  const validateButton = document.getElementById('validate-api-key-button');
+
+  // Asegurarse de que el botón esté habilitado inicialmente
+  validateButton.disabled = false;
+
+  // Evento para validar la API key
+  validateButton.addEventListener('click', async () => {
+    const apiKey = apiKeyInput.value.trim();
+
+    if (!apiKey) {
+      showApiKeyMessage('Por favor, introduce una API key válida', 'error');
+      return;
+    }
+
+    // Mostrar mensaje de carga
+    showApiKeyMessage('Validando API key...', 'loading');
+
+    // Deshabilitar botón mientras se valida
+    validateButton.disabled = true;
+
+    try {
+      // Validar la API key con el endpoint del servidor
+      const apiUrl = process.env.SERVER_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/validate-api-key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ apiKey })
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200 && data.valid) {
+        showApiKeyMessage('¡API key válida!', 'success');
+
+        // Guardar la API key en los metadatos de la sala
+        await saveApiKey(apiKey);
+
+        // Cambiar a la vista de chat después de un breve retraso
+        setTimeout(() => {
+          document.getElementById('api-key-view').style.display = 'none';
+          document.getElementById('chat-view').style.display = 'flex';
+          loadChatHistory();
+        }, 1500);
+      } else {
+        showApiKeyMessage('Error: La API key no es válida', 'error');
+        validateButton.disabled = false;
+      }
+    } catch (error) {
+      console.error('Error validando API key:', error);
+      showApiKeyMessage('Error al conectar con el servidor', 'error');
+      validateButton.disabled = false;
+    }
+  });
+
+  // También validar al presionar Enter
+  apiKeyInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !validateButton.disabled) {
+      validateButton.click();
+    }
+  });
+}
+
+// Mostrar mensaje en la vista de API key
+function showApiKeyMessage(message, type) {
+  const messageElement = document.getElementById('api-key-message');
+  messageElement.textContent = message;
+  messageElement.className = 'api-key-message';
+
+  if (type) {
+    messageElement.classList.add(type);
+  }
+}
+
+// Guardar la API key en los metadatos de la sala
+async function saveApiKey(apiKey) {
+  try {
+    let roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata') || {};
+    roomMetadata.anthropicApiKey = apiKey;
+    await obrAPI.executeOBRAction('setRoomMetadata', roomMetadata);
+    return true;
+  } catch (error) {
+    console.error('Error al guardar API key:', error);
+    return false;
+  }
+}
+
+// Eliminar la API key de los metadatos
+async function removeApiKey() {
+  try {
+    let roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata') || {};
+    roomMetadata.anthropicApiKey = undefined; // Eliminar la API key
+    await obrAPI.executeOBRAction('setRoomMetadata', roomMetadata);
+    return true;
+  } catch (error) {
+    console.error('Error al eliminar API key:', error);
+    return false;
+  }
+}
 
 // Función para cargar el historial del chat
 async function loadChatHistory() {
@@ -60,7 +221,6 @@ async function loadChatHistory() {
   try {
     let roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
     let history = roomMetadata?.history;
-    console.log('Chat history:', history);
 
     // Si no hay historial, crear uno con mensaje de bienvenida
     if (!Array.isArray(history)) {
@@ -90,8 +250,6 @@ async function loadChatHistory() {
 function showConfirmationPopup() {
   const popup = document.getElementById('confirmation-popup');
   popup.classList.add('show');
-
-  // Enfocar el botón de cancelar por defecto
   document.getElementById('cancel-clear').focus();
 }
 
@@ -104,26 +262,19 @@ function hideConfirmationPopup() {
 // Función para limpiar el historial del chat
 async function clearChatHistory() {
   try {
-    // Ocultar popup primero
     hideConfirmationPopup();
 
-    // Limpiar la interfaz
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
 
-    // Crear nuevo historial solo con mensaje de bienvenida
     const welcomeMessage = "Hello! How can I help you today?";
     const newHistory = [{ role: 'assistant', content: welcomeMessage }];
 
-    // Actualizar metadatos de la sala
     let roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
     roomMetadata.history = newHistory;
     await obrAPI.executeOBRAction('setRoomMetadata', roomMetadata);
 
-    // Mostrar mensaje de bienvenida
     addMessage(welcomeMessage, "Dungeon Master", false);
-
-    console.log('Chat history cleared successfully');
   } catch (error) {
     console.error('Error clearing chat history:', error);
     hideConfirmationPopup();
@@ -131,8 +282,38 @@ async function clearChatHistory() {
   }
 }
 
-//testing actions
-document.getElementById('clear-button').addEventListener('click', async () => {
+// Función para mostrar la vista de API key y eliminar la API key actual
+async function changeApiKey() {
+  try {
+    // Eliminar la API key de los metadatos
+    await removeApiKey();
+
+    // Mostrar la vista de API key
+    document.getElementById('api-key-view').style.display = 'flex';
+    document.getElementById('chat-view').style.display = 'none';
+
+    // Limpiar el campo de entrada
+    document.getElementById('api-key-input').value = '';
+    document.getElementById('api-key-message').textContent = '';
+    document.getElementById('api-key-message').className = 'api-key-message';
+
+    // Configurar eventos y asegurarse de que el botón esté habilitado
+    setupApiKeyView();
+    document.getElementById('validate-api-key-button').disabled = false;
+  } catch (error) {
+    console.error('Error al cambiar la API key:', error);
+    addMessage("Error al cambiar la API key. Inténtalo de nuevo.", "Dungeon Master", false);
+  }
+}
+
+// Event listeners
+document.getElementById('clear-history-button').addEventListener('click', showConfirmationPopup);
+document.getElementById('confirm-clear').addEventListener('click', clearChatHistory);
+document.getElementById('cancel-clear').addEventListener('click', hideConfirmationPopup);
+document.getElementById('change-api-key-button').addEventListener('click', changeApiKey);
+
+// Botón de prueba para crear un token en OBR
+document.getElementById('test-button').addEventListener('click', async () => {
   const options = {
     name: "Knight",
     imageUrl: "https://144.24.204.95:5173/src/assets/human.png",
@@ -147,26 +328,21 @@ document.getElementById('clear-button').addEventListener('click', async () => {
 
   setTimeout(async () => {
     await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 450, y: 450 });
-
   }, 2000); // Wait before moving
-  obrAPI.executeOBRAction('startRoom')
-  obrAPI.executeOBRAction('animateViewport', [tokenId]);
+  await obrAPI.executeOBRAction('delteItem', { id: tokenId });
+  await obrAPI.executeOBRAction('startRoom')
+  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
 })
-// Event listeners
-document.getElementById('clear-history-button').addEventListener('click', showConfirmationPopup);
-document.getElementById('confirm-clear').addEventListener('click', clearChatHistory);
-document.getElementById('cancel-clear').addEventListener('click', hideConfirmationPopup);
 
-// Cerrar popup al hacer clic en el overlay
+// Cerrar popup con overlay o Escape
 document.querySelector('.popup-overlay').addEventListener('click', hideConfirmationPopup);
-
-// Cerrar popup con Escape
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     hideConfirmationPopup();
   }
 });
 
+// Manejo de mensajes
 document.getElementById('send-button').addEventListener('click', sendMessage);
 document.getElementById('message-input').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') sendMessage();
@@ -189,8 +365,16 @@ async function sendMessage() {
     sendButton.setAttribute('aria-label', 'Communing with the spirits...');
 
     try {
+      // Obtener la API key guardada
+      const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
+      const apiKey = roomMetadata?.anthropicApiKey;
+
+      if (!apiKey) {
+        throw new Error('No se encontró la API key de Anthropic. Por favor, configúrala nuevamente.');
+      }
+
       // Use external service through WebSocket
-      const response = await obrAPI.callExternalService(content);
+      const response = await obrAPI.callExternalService(content, apiKey);
 
       // Remove loading message
       loadingMessageElement.remove();
@@ -202,8 +386,18 @@ async function sendMessage() {
       console.error('Error calling external service:', error);
       // Remove loading message on error
       loadingMessageElement.remove();
-      // Add error message as Dungeon Master response
-      addMessage("The arcane winds have interfered with our communication. Please try again.", "Dungeon Master", false);
+
+      // Verificar si es un error de API key
+      if (error.message && error.message.includes('API key')) {
+        addMessage("Error con la API key de Anthropic. Por favor, intenta configurarla nuevamente.", "Dungeon Master", false);
+        // Mostrar botón para cambiar la API key
+        setTimeout(() => {
+          changeApiKey();
+        }, 3000);
+      } else {
+        // Add error message as Dungeon Master response
+        addMessage("The arcane winds have interfered with our communication. Please try again.", "Dungeon Master", false);
+      }
     } finally {
       // Reset send button
       sendButton.disabled = false;

@@ -71,6 +71,37 @@ app.get('/tabs', (req, res) => {
     res.json({ tabs });
 });
 
+// Validar API key de Anthropic
+app.post('/validate-api-key', async (req, res) => {
+    const { apiKey } = req.body;
+
+    if (!apiKey) {
+        return res.status(400).json({ valid: false, error: 'API key no proporcionada' });
+    }
+
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/models', {
+            method: 'GET',
+            headers: {
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01'
+            }
+        });
+
+        if (response.status === 200) {
+            const data = await response.json();
+            return res.json({ valid: true, models: data.models });
+        } else {
+            return res.json({
+                valid: false,
+                error: `Error ${response.status}: La clave API no es válida`
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ valid: false, error: error.message });
+    }
+});
+
 const PORT = process.env.SERVER_PORT || 3000;
 const HOST = process.env.SERVER_HOST || 'localhost';
 const SSL_PORT = process.env.SERVER_SSL_PORT || 3443;

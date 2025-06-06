@@ -236,7 +236,6 @@ export async function executeAction(actionName, args) {
     if (!OBR.isAvailable) {
         throw new Error('OBR no disponible');
     }
-    console.log('Ejecutando acción:', actionName, 'con argumentos:', args);
     return new Promise((resolve, reject) => {
         OBR.onReady(async () => {
             try {
