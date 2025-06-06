@@ -107,7 +107,6 @@ export function createVector2(x = 0, y = 0) {
  * @param {string} options.imageUrl - URL of the image
  * @param {number} options.x - X position
  * @param {number} options.y - Y position
- * @param {string} options.layer - Layer ("CHARACTER" or "PROP")
  * @param {number} [options.width] - Width of the token (optional)
  * @param {number} [options.height] - Height of the token (optional)
  * @returns {Promise<Object>} - Success status and token ID
@@ -120,7 +119,6 @@ export async function create_token(options) {
             imageUrl,
             x,
             y,
-            layer = "CHARACTER",
             width = 100,
             height = 100
         } = options;
