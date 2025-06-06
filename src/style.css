@@ -145,6 +145,22 @@ body {
   transform: translateY(0px);
 }
 
+/* Estilo para cuando se ha copiado el texto */
+.info-tooltip.copied {
+  background-color: #f1f5ea;
+  color: #2e7d32;
+  border-color: #2e7d32;
+  font-weight: bold;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0px);
+}
+
+/* Hacer que el ícono de información tenga apariencia de botón al pasar el cursor */
+.info-icon {
+  cursor: pointer;
+}
+
 /* Estado OBR */
 .obr-status {
   display: flex;
@@ -267,12 +283,14 @@ body {
       0 0 0 0 rgba(212, 175, 55, 0.7);
     transform: translateY(-50%) scale(1);
   }
+
   50% {
     box-shadow:
       0 3px 6px rgba(0, 0, 0, 0.15),
       0 0 0 8px rgba(212, 175, 55, 0.1);
     transform: translateY(-50%) scale(1.05);
   }
+
   100% {
     box-shadow:
       0 2px 4px rgba(0, 0, 0, 0.1),
@@ -286,12 +304,14 @@ body {
     opacity: 0.7;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
   }
+
   50% {
     opacity: 1;
     text-shadow:
       0 0 10px rgba(212, 175, 55, 0.6),
       0 0 15px rgba(212, 175, 55, 0.4);
   }
+
   100% {
     opacity: 0.7;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
@@ -300,13 +320,16 @@ body {
 
 /* Loading dots animation */
 @keyframes loadingDots {
+
   0%,
   20% {
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -370,6 +393,7 @@ body {
   from {
     transform: translateY(-50%) rotate(0deg);
   }
+
   to {
     transform: translateY(-50%) rotate(360deg);
   }
@@ -382,11 +406,13 @@ body {
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
   }
+
   100% {
     opacity: 0.8;
     transform: scale(1);
@@ -400,12 +426,14 @@ body {
     border-left-color: #d4af37;
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   }
+
   50% {
     border-left-color: #ffd700;
     box-shadow:
       0 2px 15px rgba(212, 175, 55, 0.4),
       inset 0 0 20px rgba(212, 175, 55, 0.1);
   }
+
   100% {
     border-left-color: #d4af37;
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
@@ -424,6 +452,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -580,7 +609,7 @@ body {
   background: linear-gradient(135deg, #f4e8d0 0%, #e8dcc0 100%);
   border: 3px solid #8b4513;
   border-radius: 12px;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 2px 4px rgba(255, 255, 255, 0.2);
   width: 90%;
@@ -818,8 +847,13 @@ body {
 
 /* Animación reducida */
 @keyframes glow {
-  from { text-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-  to { text-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
+  from {
+    text-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
+  }
+
+  to {
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+  }
 }
 
 /* Media query para ajustar en pantallas muy pequeñas */
@@ -828,15 +862,15 @@ body {
     padding: 0.75rem;
     width: 260px;
   }
-  
+
   .api-key-icon {
     font-size: 1.5rem;
   }
-  
+
   .api-key-content h3 {
     font-size: 1.1rem;
   }
-  
+
   .api-key-content p {
     font-size: 0.8rem;
   }

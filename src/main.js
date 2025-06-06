@@ -35,7 +35,7 @@ document.querySelector('#app').innerHTML = `
       <div class="header-buttons">
         <button id="clear-history-button" class="top-icon-button" aria-label="Clear chat history" title="Clear chat history">🗑️</button>
         <button id="change-api-key-button" class="top-icon-button" aria-label="Change API Key" title="Change API Key">🔑</button>
-        <div class="info-icon" id="info-icon">
+        <div class="info-icon" id="info-icon" title="Haz clic para copiar al portapapeles">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
           </svg>
@@ -311,6 +311,31 @@ document.getElementById('clear-history-button').addEventListener('click', showCo
 document.getElementById('confirm-clear').addEventListener('click', clearChatHistory);
 document.getElementById('cancel-clear').addEventListener('click', hideConfirmationPopup);
 document.getElementById('change-api-key-button').addEventListener('click', changeApiKey);
+
+// Evento para copiar el Tab ID al portapapeles
+document.getElementById('info-icon').addEventListener('click', copyTabIdToClipboard);
+
+// Función para copiar el Tab ID al portapapeles
+function copyTabIdToClipboard() {
+  const tabId = obrAPI.getTabId();
+  navigator.clipboard.writeText(tabId)
+    .then(() => {
+      // Mostrar una notificación visual temporal
+      const tooltip = document.getElementById('info-tooltip');
+      const originalText = tooltip.textContent;
+      tooltip.textContent = '✅ ¡Copiado al portapapeles!';
+      tooltip.classList.add('copied');
+
+      // Volver al texto original después de 2 segundos
+      setTimeout(() => {
+        tooltip.textContent = originalText;
+        tooltip.classList.remove('copied');
+      }, 2000);
+    })
+    .catch(err => {
+      console.error('Error al copiar al portapapeles:', err);
+    });
+}
 
 // Botón de prueba para crear un token en OBR
 document.getElementById('test-button').addEventListener('click', async () => {
