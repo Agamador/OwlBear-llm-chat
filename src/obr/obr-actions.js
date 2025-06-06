@@ -128,6 +128,7 @@ export async function create_token(options) {
         if (!name || !imageUrl || x === undefined || y === undefined) {
             throw new Error("Missing required parameters: name, imageUrl, x, or y");
         }
+        //repasar approach de sacar las dimensiones de la imagen
 
         /* 1 ▸ obtén la resolución real de la cuadrícula del tablero */
         const dpi = await OBR.scene.grid.getDpi();
@@ -158,9 +159,43 @@ export async function create_token(options) {
         // Add token to scene
         await OBR.scene.items.addItems([token]);
 
-        return { success: true };
+        return { success: true, itemId: token.id };
     } catch (error) {
         console.error('Error creating token:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Moves a token to a new position on the scene
+ * @param {Object} options - Move options
+ * @param {string} options.id - ID of the item to move
+ * @param {number} options.x - New X position
+ * @param {number} options.y - New Y position
+ * @returns {Promise<Object>} - Success status and result
+ */
+export async function move_token(options) {
+    try {
+        // Validate required parameters
+        const { id, x, y } = options;
+
+        if (!id || x === undefined || y === undefined) {
+            throw new Error("Missing required parameters: id, x, or y");
+        }
+
+        console.log('Moving token with options:', options);
+
+        // Update the position of the item
+        await OBR.scene.items.updateItems([id], (items) => {
+            // Should only be one item
+            items.forEach(item => {
+                item.position = { x, y };
+            });
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error moving token:', error);
         return { success: false, error: error.message };
     }
 }
@@ -196,5 +231,6 @@ const actions = {
     getRoomMetadata,
     setRoomMetadata,
     createVector2,
-    create_token
+    create_token,
+    move_token
 };

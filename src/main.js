@@ -41,7 +41,11 @@ document.getElementById('clear-button').addEventListener('click', async () => {
     width: 420,
     height: 420
   }
-  obrAPI.executeOBRAction('create_token', options)
+  const result = await obrAPI.executeOBRAction('create_token', options)
+  const tokenId = result.itemId;
+  setTimeout(async () => {
+    await obrAPI.executeOBRAction('move_token', { id: tokenId, x: 450, y: 450 });
+  }, 4000); // Wait for token to be created
 })
 // Event listeners
 document.getElementById('send-button').addEventListener('click', sendMessage);
