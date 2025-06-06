@@ -87,7 +87,8 @@ export async function setRoomMetadata(metadata) {
         throw new Error('Metadata debe ser un objeto');
     }
     await OBR.room.setMetadata(metadata);
-    return { success: true };
+    const realMetadata = await OBR.room.getMetadata();
+    return { success: true, metadata: realMetadata };
 }
 
 /**

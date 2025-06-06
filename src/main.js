@@ -19,10 +19,7 @@ document.querySelector('#app').innerHTML = `
       </div>
     </div>
     <div class="chat-messages" id="chat-messages">
-      <div class="message incoming">
-        <div class="message-sender">Dungeon Master</div>
-        <div class="message-content">Hello! How can I help you today?</div>
-      </div>
+      <!-- El historial se cargará dinámicamente -->
     </div>
     <div class="chat-input-container">
       <input type="text" id="message-input" placeholder="Type your message..." />
@@ -30,6 +27,44 @@ document.querySelector('#app').innerHTML = `
     </div>
   </div>
 `;
+
+// Cargar historial del chat al inicializar
+loadChatHistory();
+
+// Función para cargar el historial del chat
+async function loadChatHistory() {
+  const chatMessages = document.getElementById('chat-messages');
+  const welcomeMessage = "Hello! How can I help you today?";
+
+  try {
+    let roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
+    let history = roomMetadata?.history;
+    console.log('Chat history:', history);
+
+    // Si no hay historial, crear uno con mensaje de bienvenida
+    if (!Array.isArray(history)) {
+      history = [{ role: 'assistant', content: welcomeMessage }];
+      roomMetadata.history = history;
+      await obrAPI.executeOBRAction('setRoomMetadata', roomMetadata);
+    }
+
+    // Limpiar y cargar mensajes
+    chatMessages.innerHTML = '';
+    history.forEach(message => {
+      const isUser = message.role === 'user';
+      addMessage(message.content, isUser ? "Player" : "Dungeon Master", isUser);
+    });
+
+  } catch (error) {
+    chatMessages.innerHTML = `
+      <div class="message incoming">
+        <div class="message-sender">Dungeon Master</div>
+        <div class="message-content">${welcomeMessage}</div>
+      </div>
+    `;
+  }
+}
+
 //testing actions
 document.getElementById('clear-button').addEventListener('click', async () => {
   const options = {

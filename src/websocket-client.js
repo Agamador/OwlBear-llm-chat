@@ -69,6 +69,10 @@ class SimpleChat {
     // Chat con IA en Gradio
     async sendChatMessage(message) {
         try {
+            let roomMetadata = await executeAction('getRoomMetadata');
+            let history = roomMetadata.history || [];
+            history.push({ role: 'user', content: message });
+
             // Obtener el estado del juego usando la función de obr-actions
             const gameStateResult = await executeAction('getGameState');
             let gameStateString = '';
@@ -90,7 +94,13 @@ class SimpleChat {
             const eventId = result.event_id;
 
             // Esperar respuesta
-            return await this.waitForResponse(eventId);
+            const agentMessage = await this.waitForResponse(eventId);
+            history.push({ role: 'assistant', content: agentMessage });
+
+            roomMetadata.history = history;
+            await executeAction('setRoomMetadata', roomMetadata);
+
+            return agentMessage;
         } catch (error) {
             throw new Error('Error conectando con IA: ' + error.message);
         }
