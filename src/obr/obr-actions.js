@@ -1,17 +1,17 @@
 // 🎮 OBR Actions - SIMPLIFICADO
-import OBR, { buildImage, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { buildImage, buildLight, buildShape } from "@owlbear-rodeo/sdk";
 
 // Crear formas
 export async function createShape(options) {
     try {
-        const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000' } = options;
-        console.log('Crear forma con opciones:', options);
+        const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000', strokeColor = '#ff0000' } = options;
 
         const item = buildShape()
             .width(width)
             .height(height)
             .shapeType(shapeType)
             .fillColor(fillColor)
+            .strokeColor(strokeColor)
             .build();
 
         await OBR.scene.items.addItems([item]);
@@ -68,7 +68,6 @@ export async function notify(message, mode = "SUCCESS") {
     if (typeof message != 'string') {
         message = JSON.stringify(message, null, 2);
     }
-    console.log('Ale, ', message.length)
     if (message.length > 253) {
         const begin = message.substring(0, 253) + '...';
         const continuation = message.substring(256);
@@ -112,7 +111,7 @@ export function createVector2(x = 0, y = 0) {
  * @param {number} [options.height] - Height of the token (optional)
  * @returns {Promise<Object>} - Success status and token ID
  */
-export async function create_token(options) {
+export async function createToken(options) {
     try {
         // Validate required parameters first
         const {
@@ -173,7 +172,7 @@ export async function create_token(options) {
  * @param {number} options.y - New Y position
  * @returns {Promise<Object>} - Success status and result
  */
-export async function move_token(options) {
+export async function moveItem(options) {
     try {
         // Validate required parameters
         const { id, x, y } = options;
@@ -181,9 +180,6 @@ export async function move_token(options) {
         if (!id || x === undefined || y === undefined) {
             throw new Error("Missing required parameters: id, x, or y");
         }
-
-        console.log('Moving token with options:', options);
-
         // Update the position of the item
         await OBR.scene.items.updateItems([id], (items) => {
             // Should only be one item
@@ -191,7 +187,6 @@ export async function move_token(options) {
                 item.position = { x, y };
             });
         });
-
         return { success: true };
     } catch (error) {
         console.error('Error moving token:', error);
@@ -205,7 +200,7 @@ export async function move_token(options) {
  * @param {string|string[]} options.ids - ID or array of IDs of items to delete
  * @returns {Promise<Object>} - Success status
  */
-export async function delete_token(options) {
+export async function deleteItem(options) {
     try {
         // Validate required parameters
         const { ids } = options;
@@ -220,8 +215,6 @@ export async function delete_token(options) {
         if (idsArray.length === 0) {
             throw new Error("No IDs provided for deletion");
         }
-
-        console.log('Deleting tokens with IDs:', idsArray);
 
         // Delete the items
         await OBR.scene.items.deleteItems(idsArray);
@@ -257,6 +250,112 @@ export async function executeAction(actionName, args) {
 }
 
 
+/**
+ * Cubre todo el tablero con niebla al 100 %.
+ * 1. Elimina cualquier shape en la capa FOG (por si alguien dibujó a mano).
+ * 2. Activa el “Fog Fill” global (`setFilled(true)`).
+ * 3. Devuelve `true` si todo fue bien.
+ *
+ * @returns {Promise<boolean>}
+ */
+export async function fillFog() {
+    try {
+        /* 1 ▸ limpia shapes antiguas de niebla estática */
+        const fogShapes = await OBR.scene.items.getItems(
+            /** @param {import("@owlbear-rodeo/sdk").Item} i */
+            (i) => i.layer === "FOG"
+        );
+        if (fogShapes.length) {
+            await OBR.scene.items.deleteItems(fogShapes.map((s) => s.id));
+        }
+
+        /* 2 ▸ activa el “Fog Fill” (la capa global opaca) */
+        await OBR.scene.fog.setFilled(true);      // ← API oficial
+
+        return { success: true, message: 'Fog started successfully' };
+    } catch (err) {
+        console.error("Error rellenando la niebla:", err);
+        // Si quieres dar feedback al GM:
+        OBR.notification.show(
+            "No pude cubrir la escena con niebla. Revisa la consola.",
+            "ERROR"
+        );
+        return false;
+    }
+}
+
+/**
+ * Añade una luz primaria que revele niebla dinámica.
+ * @param {string} targetId   ID del token (o item) al que se pega la luz
+ * @param {number} radiusCells Radio de visión en CASILLAS (p. ej. 8 = 40 ft si 5-ft/celda)
+ */
+export async function addLightSource(targetId, radiusCells = 8) {
+    const cellPx = await OBR.scene.grid.getDpi();      // píxeles por casilla
+    const radiusPx = radiusCells * cellPx;             // conviértelo a px
+    console.log(`Añadiendo luz a ${targetId} con radio de ${radiusPx}px`);
+    const light = buildLight()
+        .attachedTo(targetId)        // se moverá con el token
+        .attenuationRadius(radiusPx) // radio exterior de la luz
+        .sourceRadius(0)             // sombras “duras” (mejor rendimiento)
+        .lightType("PRIMARY")        // corta la niebla
+        .zIndex(1)                   // >=0 para estar por encima del fog fill
+        .build();
+    console.log('Light built:', light);
+    await OBR.scene.local.addItems([light]);
+    console.log('Light added to scene:', light);
+    return { success: true, lightId: light.id };
+}
+
+export async function startRoom() {
+    await fillFog();
+    const torch = await this.createShape({
+        width: 100, height: 100, shapeType: 'CIRCLE', fillColor: '#ffa00010', strokeColor: '#ff000000'
+    });
+    const torchId = torch.itemId;
+    await moveItem({ id: torchId, x: 150, y: 150 })
+    await addLightSource(torchId);
+    return { success: true, message: 'Room started successfully' };
+}
+
+/**
+ * Anima la cámara del jugador.
+ *
+ * ①  Si le pasas { x, y, scale? }  →  centra en esas coords.  
+ * ②  Si le pasas { itemIds:[...] } →  enfoca los ítems dados.  
+ *
+ * @param {{ x:number, y:number, scale?:number } |
+ *         { itemIds:string[] }} opts
+ * @returns {Promise<{success:boolean, error?:string}>}
+ */
+export async function animateViewport(opts) {
+    try {
+        /* ── Variante ②: enfocar ítems ────────────────────────── */
+        if ("itemIds" in opts) {
+            if (!Array.isArray(opts.itemIds) || opts.itemIds.length === 0) {
+                throw new Error("itemIds debe ser un array con al menos un ID");
+            }
+            const bounds = await OBR.scene.items.getItemBounds(opts.itemIds);
+            await OBR.viewport.animateToBounds(bounds);   // zoom-fit a la sala
+            return { success: true };
+        }
+
+        /* ── Variante ①: enfocar coordenadas ───────────────────── */
+        const { x, y, scale = 1 } = opts;
+        if (x === undefined || y === undefined) {
+            throw new Error("Debes pasar x e y o bien itemIds");
+        }
+        await OBR.viewport.animateTo({
+            position: { x, y },
+            scale
+        });
+        return { success: true };
+
+    } catch (err) {
+        console.error("Error en animateViewport:", err);
+        return { success: false, error: err.message };
+    }
+}
+
 const actions = {
     createShape,
     getGameState,
@@ -264,7 +363,11 @@ const actions = {
     getRoomMetadata,
     setRoomMetadata,
     createVector2,
-    create_token,
-    move_token,
-    delete_token
+    createToken,
+    moveItem,
+    deleteItem,
+    fillFog,
+    startRoom,
+    addLightSource,
+    animateViewport
 };

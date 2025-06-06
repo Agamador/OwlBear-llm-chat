@@ -135,23 +135,22 @@ async function clearChatHistory() {
 document.getElementById('clear-button').addEventListener('click', async () => {
   const options = {
     name: "Knight",
-    imageUrl: "http://localhost:5173/src/assets/knight1.png",
+    imageUrl: "https://144.24.204.95:5173/src/assets/human.png",
     x: 100,
     y: 100,
     layer: "CHARACTER",
     width: 420,
     height: 420
   }
-  const result = await obrAPI.executeOBRAction('create_token', options)
+  const result = await obrAPI.executeOBRAction('createToken', options)
   const tokenId = result.itemId;
 
   setTimeout(async () => {
-    await obrAPI.executeOBRAction('move_token', { id: tokenId, x: 450, y: 450 });
+    await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 450, y: 450 });
 
-    setTimeout(async () => {
-      await obrAPI.executeOBRAction('delete_token', { ids: tokenId });
-    }, 4000); // Wait before deleting
   }, 2000); // Wait before moving
+  obrAPI.executeOBRAction('startRoom')
+  obrAPI.executeOBRAction('animateViewport', [tokenId]);
 })
 // Event listeners
 document.getElementById('clear-history-button').addEventListener('click', showConfirmationPopup);
