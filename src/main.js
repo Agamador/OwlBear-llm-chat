@@ -15,6 +15,7 @@ document.querySelector('#app').innerHTML = `
         <div class="info-tooltip" id="info-tooltip">
           Tab ID: ${obrAPI.getTabId()}
         </div>
+      <button id="clear-button" aria-label="Test action">🗑️</button>
       </div>
     </div>
     <div class="chat-messages" id="chat-messages">
@@ -29,7 +30,28 @@ document.querySelector('#app').innerHTML = `
     </div>
   </div>
 `;
+//testing actions
+document.getElementById('clear-button').addEventListener('click', async () => {
+  const options = {
+    name: "Knight",
+    imageUrl: "http://localhost:5173/src/assets/knight1.png",
+    x: 100,
+    y: 100,
+    layer: "CHARACTER",
+    width: 420,
+    height: 420
+  }
+  const result = await obrAPI.executeOBRAction('create_token', options)
+  const tokenId = result.itemId;
 
+  setTimeout(async () => {
+    await obrAPI.executeOBRAction('move_token', { id: tokenId, x: 450, y: 450 });
+
+    setTimeout(async () => {
+      await obrAPI.executeOBRAction('delete_token', { ids: tokenId });
+    }, 4000); // Wait before deleting
+  }, 2000); // Wait before moving
+})
 // Event listeners
 document.getElementById('send-button').addEventListener('click', sendMessage);
 document.getElementById('message-input').addEventListener('keypress', (e) => {

@@ -1,7 +1,5 @@
 // 🚀 CHAT SIMPLIFICADO
 import { executeAction } from './obr/obr-actions.js';
-import OBR from '@owlbear-rodeo/sdk';
-import { Client } from "@gradio/client";
 
 class SimpleChat {
     constructor() {
@@ -13,14 +11,15 @@ class SimpleChat {
     setupExternalActions() {
         const eventSource = new EventSource(`http://localhost:3000/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
-            console.log('📨 Mensaje recibido:', event.data);
-
+            if (event.data == `{"type":"ping"}`) {
+                console.log('📨 Mensaje recibido:', event.data);
+            }
             try {
                 const data = JSON.parse(event.data);
 
                 // Ignorar pings
                 if (data.type === 'ping') {
-                    console.log('🏓 Ping recibido');
+                    //console.log('🏓 Ping recibido');
                     return;
                 }
 
@@ -58,6 +57,7 @@ class SimpleChat {
 
             const result = await executeAction(action, ...args);
             console.log('✅ Acción completada:', result);
+            await executeAction('notify', result)
             return result;
         } catch (error) {
             console.log(error);
@@ -69,6 +69,17 @@ class SimpleChat {
     // Chat con IA en Gradio
     async sendChatMessage(message) {
         try {
+            // Obtener el estado del juego usando la función de obr-actions
+            const gameStateResult = await executeAction('getGameState');
+            let gameStateString = '';
+
+            if (gameStateResult.success) {
+                // Convertir el gameState a string JSON formateado
+                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);
+                // Combinar mensaje con gameState
+                message = `${message}\n\n--- GAME STATE ---\n${gameStateString}`;
+            }
+
             const response = await fetch('http://localhost:7860/gradio_api/call/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -134,7 +145,8 @@ export const obrAPI = {
     }
 };
 
-// Setup simplificado (ya no necesita inicialización asíncrona)
+// Setup simplif
+// icado (ya no necesita inicialización asíncrona)
 export function setupWebSocketConnection() {
     console.log('✅ Chat listo, TabId:', simpleChat.tabId);
 }
