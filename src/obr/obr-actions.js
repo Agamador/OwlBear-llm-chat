@@ -5,7 +5,6 @@ import OBR, { buildImage, buildLight, buildShape } from "@owlbear-rodeo/sdk";
 export async function createShape(options) {
     try {
         const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000', strokeColor = '#ff0000' } = options;
-        console.log('Creating shape with options:', width, height, shapeType, fillColor, strokeColor);
         const item = buildShape()
             .width(width)
             .height(height)
@@ -291,7 +290,6 @@ export async function fillFog() {
 export async function addLightSource(targetId, radiusCells = 8) {
     const cellPx = await OBR.scene.grid.getDpi();      // píxeles por casilla
     const radiusPx = radiusCells * cellPx;             // conviértelo a px
-    console.log(`Añadiendo luz a ${targetId} con radio de ${radiusPx}px`);
     const light = buildLight()
         .attachedTo(targetId)        // se moverá con el token
         .attenuationRadius(radiusPx) // radio exterior de la luz
@@ -299,9 +297,7 @@ export async function addLightSource(targetId, radiusCells = 8) {
         .lightType("PRIMARY")        // corta la niebla
         .zIndex(1)                   // >=0 para estar por encima del fog fill
         .build();
-    console.log('Light built:', light);
     await OBR.scene.local.addItems([light]);
-    console.log('Light added to scene:', light);
     return { success: true, lightId: light.id };
 }
 
@@ -311,8 +307,8 @@ export async function startRoom() {
         width: 100, height: 100, shapeType: 'CIRCLE', fillColor: '#ffa00010', strokeColor: '#ff000000'
     });
     const torchId = torch.itemId;
-    await moveItem({ id: torchId, x: 150, y: 150 })
     await addLightSource(torchId);
+    await moveItem({ id: torchId, x: 150, y: 150 })
     return { success: true, message: 'Room started successfully' };
 }
 
@@ -329,11 +325,9 @@ export async function startRoom() {
 export async function animateViewport(opts) {
     try {
         /* ── Variante ②: enfocar ítems ────────────────────────── */
-        if ("itemIds" in opts) {
-            if (!Array.isArray(opts.itemIds) || opts.itemIds.length === 0) {
-                throw new Error("itemIds debe ser un array con al menos un ID");
-            }
-            const bounds = await OBR.scene.items.getItemBounds(opts.itemIds);
+        if (Array.isArray(opts)) {
+            let bounds = await OBR.scene.items.getItemBounds(opts);
+            bounds = expandBounds(bounds, 20); // amplía los límites un 50%
             await OBR.viewport.animateToBounds(bounds);   // zoom-fit a la sala
             return { success: true };
         }
@@ -355,6 +349,68 @@ export async function animateViewport(opts) {
     }
 }
 
+/**
+ * Amplía los límites (bounds) manteniendo el mismo centro
+ * 
+ * @param {Object} bounds - Objeto con propiedades min, max, width, height y center
+ * @param {number} scaleFactor - Factor de escala (1 = sin cambios, 2 = doble tamaño, etc.)
+ * @returns {Object} Nuevos límites ampliados
+ */
+export function expandBounds(bounds, scaleFactor = 1.5) {
+    if (!bounds || !bounds.center || !bounds.width || !bounds.height) {
+        throw new Error("Bounds inválidos: se requiere center, width y height");
+    }
+
+    // Calcula las nuevas dimensiones
+    const newWidth = bounds.width * scaleFactor;
+    const newHeight = bounds.height * scaleFactor;
+
+    // Calcula los nuevos puntos min y max manteniendo el mismo centro
+    const newMin = {
+        x: bounds.center.x - newWidth / 2,
+        y: bounds.center.y - newHeight / 2
+    };
+
+    const newMax = {
+        x: bounds.center.x + newWidth / 2,
+        y: bounds.center.y + newHeight / 2
+    };
+
+    // Devuelve los nuevos bounds con el mismo formato
+    return {
+        min: newMin,
+        max: newMax,
+        width: newWidth,
+        height: newHeight,
+        center: { ...bounds.center } // Mantiene el mismo centro
+    };
+}
+
+export async function insertMap(mapUrl) {
+    const image = {
+        url: mapUrl,
+        width: 6000,
+        height: 6000,
+        mime: "image/png",
+    };
+
+    const dpi = await OBR.scene.grid.getDpi();
+    const grid = {
+        dpi: dpi, // 30 cells square
+        offset: { x: 0, y: 0 },
+    };
+    // Calculate escale based on map cell width in pixels (6000/30 = 200 px)
+    const scale = dpi / 200
+    console.log('insertMap', { image, grid });
+    const token = buildImage(image, grid)
+        .scale({ x: scale, y: scale })
+        .zIndex(-10)   // builder oficial :contentReference[oaicite:1]{index=1}      // método de GenericItemBuilder :contentReference[oaicite:2]{index=2}
+        .build();
+    await OBR.scene.items.addItems([token]);
+
+    return { success: true };
+}
+
 const actions = {
     createShape,
     getGameState,
@@ -368,5 +424,6 @@ const actions = {
     fillFog,
     startRoom,
     addLightSource,
-    animateViewport
+    animateViewport,
+    insertMap
 };

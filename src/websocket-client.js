@@ -1,87 +1,77 @@
-// 🚀 CHAT SIMPLIFICADO
-import { executeAction } from './obr/obr-actions.js';
+// 🚀 SIMPLIFIED CHAT
 import { Client } from '@gradio/client';
+import { executeAction } from './obr/obr-actions.js';
 
 class SimpleChat {
     constructor() {
         this.tabId = `tab_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         this.setupExternalActions();
-    }
-
-    // Escuchar acciones desde servicios externos
+    }    // Listen for actions from external services
     setupExternalActions() {
         const apiUrl = process.env.SERVER_URL || 'http://localhost:3000';
         const eventSource = new EventSource(`${apiUrl}/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
-            // Solo aparezca en dev
+            // Only show in dev
             if (event.data == `{"type":"ping"}`) {
-                console.log('📨 Mensaje recibido:', event.data);
+                console.log('📨 Message received:', event.data);
             }
             try {
-                const data = JSON.parse(event.data);
-
-                // Ignorar pings
+                const data = JSON.parse(event.data);// Ignore pings
                 if (data.type === 'ping') {
-                    //console.log('🏓 Ping recibido');
+                    //console.log('🏓 Ping received');
                     return;
                 }
 
-                // Verificar que tenga action y args
+                // Verify that it has action and args
                 if (data.action && data.args !== undefined) {
-                    console.log('🎮 Ejecutando acción:', data.action, 'con argumentos:', data.args);
+                    console.log('🎮 Executing action:', data.action, 'with arguments:', data.args);
                     this.executeOBRAction(data.action, data.args);
                 } else {
-                    console.warn('⚠️ Mensaje sin action o args:', data);
+                    console.warn('⚠️ Message without action or args:', data);
                 }
             } catch (error) {
-                console.error('❌ Error parseando mensaje SSE:', error);
+                console.error('❌ Error parsing SSE message:', error);
             }
-        };
-
-        eventSource.onerror = (error) => {
-            console.error('❌ Error en SSE:', error);
+        }; eventSource.onerror = (error) => {
+            console.error('❌ Error in SSE:', error);
         };
 
         eventSource.onopen = () => {
-            console.log('✅ Conexión SSE establecida, TabId:', this.tabId);
+            console.log('✅ SSE connection established, TabId:', this.tabId);
         };
-    }
-
-    // Ejecutar acción OBR
+    }    // Execute OBR action
     async executeOBRAction(action, args) {
         try {
-            console.log('🚀 Ejecutando:', action, 'con args:', args);
+            console.log('🚀 Executing:', action, 'with args:', args);
 
-            // Verificar que args sea un array
+            // Verify that args is an array
             if (!Array.isArray(args)) {
-                console.warn('⚠️ Args no es array, convirtiendo:', args);
+                console.warn('⚠️ Args is not an array, converting:', args);
                 args = args ? [args] : [];
             }
 
             const result = await executeAction(action, ...args);
-            //estos dos logs que solo vayan en dev
-            console.log('✅ Acción completada:', result);
+            //these two logs should only appear in dev
+            console.log('✅ Action completed:', result);
             //await executeAction('notify', result);
             return result;
         } catch (error) {
             console.log(error);
-            console.error('❌ Error ejecutando acción:', error);
+            console.error('❌ Error executing action:', error);
             throw error;
         }
-    }    // Chat con IA en Gradio
+    }    // Chat with AI in Gradio
     async sendChatMessage(message, apiKey) {
         try {
             let roomMetadata = await this.executeOBRAction('getRoomMetadata');
             let history = roomMetadata.history || [];
-            history.push({ role: 'user', content: message });
-
-            // Obtener el estado del juego usando la función de obr-actions
+            history.push({ role: 'user', content: message });            // Get game state using the obr-actions function
             const gameStateResult = await this.executeOBRAction('getGameState');
             let gameStateString = '';
 
             if (gameStateResult.success) {
-                // Convertir el gameState a string JSON formateado
-                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);            // Combinar mensaje con gameState
+                // Convert gameState to formatted JSON string
+                gameStateString = JSON.stringify(gameStateResult.gameState, null, 2);            // Combine message with gameState
                 message = `${message}\n\n--- GAME STATE ---\n${gameStateString}`;
             }
 
@@ -94,7 +84,7 @@ class SimpleChat {
                     tab_id: this.tabId,
                     anthropic_api_key: apiKey,
                 });
-                agentMessage = response.data[0]; // Asumiendo que la respuesta es un array con el mensaje
+                agentMessage = response.data[0]; // Assuming the response is an array with the message
             } else {
                 const response = await fetch(`${gradioUrl}/gradio_api/call/predict`, {
                     method: 'POST',
@@ -105,9 +95,7 @@ class SimpleChat {
                 });
 
                 const result = await response.json();
-                const eventId = result.event_id;
-
-                // Esperar respuesta
+                const eventId = result.event_id;                // Wait for response
                 agentMessage = await this.waitForResponse(eventId);
             }
             history.push({ role: 'assistant', content: agentMessage });
@@ -117,63 +105,55 @@ class SimpleChat {
 
             return agentMessage;
         } catch (error) {
-            throw new Error('Error conectando con IA: ' + error.message);
+            throw new Error('Error connecting with AI: ' + error.message);
         }
     }
 
     async waitForResponse(eventId) {
         const gradioUrl = process.env.GRADIO_URL || 'http://localhost:7860';
         return new Promise((resolve, reject) => {
-            const es = new EventSource(`${gradioUrl}/gradio_api/call/predict/${eventId}`, { withCredentials: false });
-
-            es.addEventListener('complete', (event) => {
+            const es = new EventSource(`${gradioUrl}/gradio_api/call/predict/${eventId}`, { withCredentials: false }); es.addEventListener('complete', (event) => {
                 const result = JSON.parse(event.data)[0];
-                es.close(); // Cerrar el EventSource
-                resolve(result); // Resolver la promesa con el resultado
-            });
-
-            es.addEventListener('error', (error) => {
+                es.close(); // Close the EventSource
+                resolve(result); // Resolve the promise with the result
+            }); es.addEventListener('error', (error) => {
                 es.close();
-                reject(error); // Rechazar la promesa en caso de error
+                reject(error); // Reject the promise in case of error
             });
         });
-    }
-
-    // Util cuando este desplegada en un space de huggingface
+    }    // Useful when deployed in a Hugging Face space
     // async sendChatMessage(message) {
     //     const gradioUrl = process.env.VITE_GRADIO_URL || 'http://localhost:7860';
     //     const app = new Client(gradioUrl);
-    //     console.log('📬 Enviando mensaje a IA:', message);
+    //     console.log('📬 Sending message to AI:', message);
     //     const result = await app.predict("/gradio_api/call/predict",[message]);
-    //     console.log('📬 Mensaje enviado a IA, respuesta:', result)
+    //     console.log('📬 Message sent to AI, response:', result)
     //     return result;
     // }
 }
 
-// Instancia global
+// Global instance
 const simpleChat = new SimpleChat();
 
-// API simplificada
+// Simplified API
 export const obrAPI = {
-    // Chat con IA
+    // Chat with AI
     async callExternalService(message, apiKey) {
         return await simpleChat.sendChatMessage(message, apiKey);
     },
 
-    // Ejecutar acción OBR 
-    // Parece que no se usa más, pero lo dejamos por compatibilidad
+    // Execute OBR action
+    // Doesn't seem to be used anymore, but we keep it for compatibility
     async executeOBRAction(action, ...args) {
         return await simpleChat.executeOBRAction(action, args);
-    },
-
-    // Obtener ID de pestaña
+    },    // Get tab ID
     getTabId() {
         return simpleChat.tabId;
     }
 };
 
 // Setup simplif
-// icado (ya no necesita inicialización asíncrona)
+// ied (no longer needs asynchronous initialization)
 export function setupWebSocketConnection() {
-    console.log('✅ Chat listo, TabId:', simpleChat.tabId);
+    console.log('✅ Chat ready, TabId:', simpleChat.tabId);
 }

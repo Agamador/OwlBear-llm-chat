@@ -342,8 +342,8 @@ document.getElementById('test-button').addEventListener('click', async () => {
   const options = {
     name: "Knight",
     imageUrl: "https://144.24.204.95:5173/src/assets/human.png",
-    x: 100,
-    y: 100,
+    x: 0,
+    y: 0,
     layer: "CHARACTER",
     width: 420,
     height: 420
@@ -351,12 +351,26 @@ document.getElementById('test-button').addEventListener('click', async () => {
   const result = await obrAPI.executeOBRAction('createToken', options)
   const tokenId = result.itemId;
 
+  // await obrAPI.executeOBRAction('startRoom')
+  // await obrAPI.executeOBRAction('animateViewport', [tokenId]);
+  await obrAPI.executeOBRAction('insertMap', 'https://144.24.204.95:5173/src/assets/battleMap.jpg')
+
   setTimeout(async () => {
-    await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 450, y: 450 });
-  }, 2000); // Wait before moving
-  await obrAPI.executeOBRAction('deleteItem', { id: tokenId });
-  await obrAPI.executeOBRAction('startRoom')
-  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
+    setTimeout(async () => {
+      // Mover el token a una posición diferente
+      await obrAPI.executeOBRAction('moveItem', {
+        id: tokenId,
+        x: 0,
+        y: 0,
+      });
+    }, 2000)
+    //await obrAPI.executeOBRAction('deleteItem', { ids: tokenId });
+    await obrAPI.executeOBRAction('moveItem', {
+      id: tokenId,
+      x: 150,
+      y: 150
+    });
+  }, 2000);
 })
 
 // Cerrar popup con overlay o Escape
