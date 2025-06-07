@@ -1,78 +1,11 @@
+import htmlContent from './chat.html?raw';
 import './style.css';
 import { obrAPI, setupWebSocketConnection } from './websocket-client.js';
 
 // Inicializar
 setupWebSocketConnection();
 
-document.querySelector('#app').innerHTML = `
-  <!-- Vista para introducir la API key de Anthropic -->
-  <div class="api-key-container" id="api-key-view">
-    <div class="api-key-header">
-      <h2>🔑 API KEY SETUP</h2>
-    </div>
-    <div class="api-key-content">
-      <div class="api-key-icon">🧙‍♂️</div>
-      <h3>Bienvenido, Maestro de Calabozos</h3>
-      <p>Para empezar a usar la IA, necesitas proporcionar tu API Key de Anthropic</p>
-      
-      <div class="api-key-input-container">
-        <input type="password" id="api-key-input" 
-          placeholder="Anthropic API KEY" 
-          autocomplete="off" />
-      </div>
-      <div class="api-key-message" id="api-key-message"></div>
-      
-      <button id="validate-api-key-button" class="api-key-button">
-        Validar y Continuar
-      </button>
-    </div>
-  </div>
-
-  <!-- Vista del chat -->  <div class="chat-container" id="chat-view" style="display: none;">
-    <div class="chat-header">
-      <button id="test-button" class="top-icon-button" aria-label="Test action">⚡</button>
-      <h2>CHAT</h2>
-      <div class="header-buttons">
-      <button id="eraser-button" class="top-icon-button" aria-label="Erase mode" title="Toggle eraser tool">🧽</button>
-        <button id="clear-history-button" class="top-icon-button" aria-label="Clear chat history" title="Clear chat history">🗑️</button>
-        <button id="change-api-key-button" class="top-icon-button" aria-label="Change API Key" title="Change API Key">🔑</button>
-        <div class="info-icon" id="info-icon" title="Haz clic para copiar al portapapeles">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-          </svg>
-          <div class="info-tooltip" id="info-tooltip">
-            Tab ID: ${obrAPI.getTabId()}
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="chat-messages" id="chat-messages">
-      <!-- El historial se cargará dinámicamente -->
-    </div>
-    <div class="chat-input-container">
-      <input type="text" id="message-input" placeholder="Type your message..." />
-      <button id="send-button" aria-label="Send message">🪶</button>
-    </div>
-  </div>
-  
-  <!-- Popup de confirmación -->
-  <div class="confirmation-popup" id="confirmation-popup">
-    <div class="popup-overlay"></div>
-    <div class="popup-content">
-      <div class="popup-header">
-        <h3>⚠️ Confirm Action</h3>
-      </div>
-      <div class="popup-body">
-        <p>Are you sure you want to clear the entire chat history?</p>
-        <p class="popup-warning">This action cannot be undone. All messages will be permanently lost.</p>
-      </div>
-      <div class="popup-buttons">
-        <button id="cancel-clear" class="popup-button cancel-button">Cancel</button>
-        <button id="confirm-clear" class="popup-button confirm-button">Clear History</button>
-      </div>
-    </div>
-  </div>
-`;
+document.querySelector('#app').innerHTML = htmlContent;
 
 // Cargar historial del chat al inicializar
 checkApiKeyAndInitialize();
