@@ -1,5 +1,5 @@
 :root {
-  font-family: "Cinzel", "Trajan Pro", "UnifrakturMaguntia", "Berkshire Swash", "MedievalSharp", serif;
+  font-family: "IM Fell English", serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
@@ -117,7 +117,7 @@ body {
   border-radius: 8px;
   border: 2px solid #8b4513;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1.4;
   width: auto;
   min-width: 150px;
@@ -129,7 +129,7 @@ body {
   transition: all 0.3s ease;
   white-space: nowrap;
   text-align: left;
-  font-family: monospace;
+  font-family: "IM Fell English", serif;
 }
 
 .info-icon:hover .info-tooltip {
@@ -200,7 +200,7 @@ body {
   border-radius: 4px;
   display: inline-block;
   border: 1px solid rgba(139, 69, 19, 0.3);
-  font-family: "Berkshire Swash", serif;
+  font-family: "IM Fell English", serif;
   color: #2c1810;
   width: fit-content;
 }
@@ -218,12 +218,12 @@ body {
 .message-content {
   padding: 0;
   word-wrap: break-word;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.4;
   background: transparent;
   color: #000000;
   position: relative;
-  font-family: "Metamorphous", serif;
+  font-family: "IM Fell English", serif;
 }
 
 .message.outgoing .message-content {
@@ -314,7 +314,7 @@ body {
   border: 2px solid #8b4513;
   border-radius: 8px;
   outline: none;
-  font-size: 1rem;
+  font-size: 1.2rem;
   background: rgba(255, 255, 255, 0.9);
   color: #4a2c17;
   font-family: inherit;
@@ -444,7 +444,7 @@ body {
 .popup-warning {
   color: #8b4513 !important;
   font-style: italic;
-  font-size: 0.9rem !important;
+  font-size: 1.1rem !important;
   background: rgba(139, 69, 19, 0.1);
   padding: 0.75rem;
   border-radius: 6px;
@@ -560,16 +560,16 @@ body {
 }
 
 .api-key-content h3 {
-  font-family: "Berkshire Swash", serif;
+  font-family: "IM Fell English", serif;
   color: #4a2c17;
   margin-bottom: 0.5rem;
   font-size: 1.3rem;
 }
 
 .api-key-content p {
-  font-family: "Metamorphous", serif;
+  font-family: "IM Fell English", serif;
   margin-bottom: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .api-key-input-container {
@@ -583,10 +583,10 @@ body {
   padding: 0.75rem;
   border: 2px solid #8b4513;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   background: rgba(255, 255, 255, 0.9);
   color: #4a2c17;
-  font-family: monospace;
+  font-family: "IM Fell English", serif;
 }
 
 .api-key-button {
@@ -612,7 +612,7 @@ body {
   margin: 0.5rem 0;
   padding: 0.5rem;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -644,13 +644,13 @@ body {
     width: 260px;
   }
   .api-key-icon {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
   .api-key-content h3 {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
   }
   .api-key-content p {
-    font-size: 0.8rem;
+    font-size: 1rem;
   }
 }
 
