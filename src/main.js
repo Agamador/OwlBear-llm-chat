@@ -339,6 +339,7 @@ function copyTabIdToClipboard() {
 
 // Botón de prueba para crear un token en OBR
 document.getElementById('test-button').addEventListener('click', async () => {
+  await obrAPI.executeOBRAction('removeFog');
   await obrAPI.executeOBRAction('insertMap', 'https://144.24.204.95:5173/src/assets/battleMap.jpg')
   await new Promise(resolve => setTimeout(resolve, 2000));
   for (let i = 0; i < 30; i += 6) {
@@ -362,8 +363,6 @@ document.getElementById('test-button').addEventListener('click', async () => {
     size: 1,
   })
   const tokenId = result.itemId;
-
-  // 
 
   // await obrAPI.executeOBRAction('animateViewport', [tokenId]);
 
@@ -394,6 +393,13 @@ document.getElementById('test-button').addEventListener('click', async () => {
   await new Promise(resolve => setTimeout(resolve, 2000));
   await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
   //await obrAPI.executeOBRAction('animateViewport', { x: 14, y: 14, scale: 0.75 });
+  await obrAPI.executeOBRAction('fillFog');
+  await obrAPI.executeOBRAction('addLightSource', { targetId: tokenId });
+  await obrAPI.executeOBRAction('moveItem', {
+    id: tokenId,
+    x: 14,
+    y: 14,
+  });
 
   console.log(await obrAPI.executeOBRAction('getGameState'));
 })

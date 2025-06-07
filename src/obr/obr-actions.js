@@ -55,7 +55,7 @@ export async function getGameState() {
 
         // Todos los elementos de la escena
         const allItems = await OBR.scene.items.getItems();
-        const pdi = await OBR.scene.grid.getDpi();
+        const dpi = await OBR.scene.grid.getDpi();
 
         // Estado simplificado
         const shapes = allItems
@@ -65,8 +65,8 @@ export async function getGameState() {
                 shapeType: item.shapeType,
                 color: item.fillColor || 'NoColor',
                 position: {
-                    x: item.position.x / pdi,
-                    y: item.position.y / pdi
+                    x: item.position.x / dpi,
+                    y: item.position.y / dpi
                 },
             }));
 
@@ -78,8 +78,8 @@ export async function getGameState() {
                 width: item.metadata.width,
                 height: item.metadata.height,
                 position: {
-                    x: item.position.x / pdi,
-                    y: item.position.y / pdi
+                    x: item.position.x / dpi,
+                    y: item.position.y / dpi
                 },
             }));
 
@@ -198,6 +198,7 @@ export async function createToken(options) {
         const token = buildImage(image, grid)
             .scale({ x: scale, y: scale })
             .plainText(name)
+            .layer('CHARACTER')
             .build();
 
         token.metadata = {
@@ -236,18 +237,19 @@ export async function moveItem(options) {
     try {
         // Validate required parameters
         // Position (x,y) will be in cells
-        const { id, x, y } = options;
+        const { id, x, y, isLocal = false } = options;
 
         if (!id || x === undefined || y === undefined) {
             throw new Error("Missing required parameters: id, x, or y");
         }
-        // Update the position of the item
         const dpi = await OBR.scene.grid.getDpi();
-        await OBR.scene.items.updateItems([id], (items) => {
+        // Update the position of the item
+        function updatePosition(items) {
             // Should only be one item
             items.forEach(item => {
                 const pixelsWidth = item.width;
                 const pixelsHeight = item.height;
+                console.log("Moving item:", item.id, "to position:", { x, y }, "with dpi:", dpi);
                 if (!pixelsWidth || !pixelsHeight) { // TOKENS
                     item.position = {
                         x: x * dpi,
@@ -260,8 +262,17 @@ export async function moveItem(options) {
                         y: y * dpi + pixelsHeight / 2
                     };
                 }
+
+                console.log("New position:", item.position);
             });
-        });
+        }
+
+        if (isLocal) {
+            await OBR.scene.local.updateItems([id], updatePosition);
+        } else {
+            await OBR.scene.items.updateItems([id], updatePosition);
+        }
+
         return { success: true };
     } catch (error) {
         console.error('Error moving token:', error);
@@ -312,27 +323,43 @@ export async function deleteItem(options) {
  */
 export async function fillFog() {
     try {
-        /* 1 ▸ limpia shapes antiguas de niebla estática */
+        // Remove old fog shapes
         const fogShapes = await OBR.scene.items.getItems(
-            /** @param {import("@owlbear-rodeo/sdk").Item} i */
             (i) => i.layer === "FOG"
         );
         if (fogShapes.length) {
             await OBR.scene.items.deleteItems(fogShapes.map((s) => s.id));
         }
 
-        /* 2 ▸ activa el “Fog Fill” (la capa global opaca) */
-        await OBR.scene.fog.setFilled(true);      // ← API oficial
+        await OBR.scene.fog.setFilled(true);
 
         return { success: true, message: 'Fog started successfully' };
     } catch (err) {
-        console.error("Error rellenando la niebla:", err);
-        // Si quieres dar feedback al GM:
-        OBR.notification.show(
-            "No pude cubrir la escena con niebla. Revisa la consola.",
-            "ERROR"
+        return {
+            success: false,
+            error: `Error filling fog: ${err.message}`
+        }
+    }
+}
+
+export async function removeFog() {
+    try {
+        // Remove old fog shapes
+        const fogShapes = await OBR.scene.items.getItems(
+            (i) => i.layer === "FOG"
         );
-        return false;
+        if (fogShapes.length) {
+            await OBR.scene.items.deleteItems(fogShapes.map((s) => s.id));
+        }
+
+        await OBR.scene.fog.setFilled(false);
+
+        return { success: true, message: 'Fog removed successfully' };
+    } catch (err) {
+        return {
+            success: false,
+            error: `Error removing fog: ${err.message}`
+        }
     }
 }
 
@@ -341,17 +368,29 @@ export async function fillFog() {
  * @param {string} targetId   ID del token (o item) al que se pega la luz
  * @param {number} radiusCells Radio de visión en CASILLAS (p. ej. 8 = 40 ft si 5-ft/celda)
  */
-export async function addLightSource(targetId, radiusCells = 8) {
-    const cellPx = await OBR.scene.grid.getDpi();      // píxeles por casilla
-    const radiusPx = radiusCells * cellPx;             // conviértelo a px
+export async function addLightSource(options) {
+    const { targetId, radiusCells = 3 } = options;
+    const dpi = await OBR.scene.grid.getDpi();
+    const radiusPx = radiusCells * dpi;
+
     const light = buildLight()
-        .attachedTo(targetId)        // se moverá con el token
-        .attenuationRadius(radiusPx) // radio exterior de la luz
-        .sourceRadius(0)             // sombras “duras” (mejor rendimiento)
-        .lightType("PRIMARY")        // corta la niebla
-        .zIndex(1)                   // >=0 para estar por encima del fog fill
+        .attachedTo(targetId)
+        .attenuationRadius(radiusPx)
+        .sourceRadius(0)
+        .lightType("PRIMARY")
+        .zIndex(1)
         .build();
     await OBR.scene.local.addItems([light]);
+
+    const token = (await OBR.scene.items.getItems([targetId]))[0];
+
+    await executeAction('moveItem', {
+        id: light.id,
+        x: token.position.x / dpi + 0.5,
+        y: token.position.y / dpi + 0.5,
+        isLocal: true
+    });
+
     return { success: true, lightId: light.id };
 }
 
@@ -392,13 +431,13 @@ export async function animateViewport(opts) {
             throw new Error("Debes pasar x e y o bien itemIds");
         }
 
-        const pdi = await OBR.scene.grid.getDpi();
-        x *= pdi; // multiplica por pdi para pasar a píxeles
-        y *= pdi; // multiplica por pdi para pasar a píxeles
+        const dpi = await OBR.scene.grid.getDpi();
+        x *= dpi; // multiplica por dpi para pasar a píxeles
+        y *= dpi; // multiplica por dpi para pasar a píxeles
 
         console.log("Animando viewport a:", { x, y, scale });
         await OBR.viewport.animateTo({
-            position: { x, y }, // multiplica por pdi para pasar a píxeles
+            position: { x, y }, // multiplica por dpi para pasar a píxeles
             scale
         });
         return { success: true };
@@ -513,6 +552,7 @@ const actions = {
     moveItem,
     deleteItem,
     fillFog,
+    removeFog,
     startRoom,
     addLightSource,
     animateViewport,
