@@ -445,9 +445,10 @@ export async function startRoom() {
  *         { itemsId:[]string }} itemsId
  * @returns {Promise<{success:boolean, error?:string}>}
  */
-export async function animateViewport(itemsId) {
+export async function animateViewport(options) {
+    const { itemsId } = options;
     try {
-        const itemBounds = await OBR.scene.items.getItemBounds(itemsId);
+        const itemBounds = await OBR.scene.items.getItemBounds([itemsId]);
         const newBounds = expandBounds(itemBounds, 4); // Ampliar los límites un 50%
         await OBR.viewport.animateToBounds(newBounds)
 
@@ -494,7 +495,8 @@ export function expandBounds(bounds, scaleFactor = 1.5) {
     };
 }
 
-export async function insertMap(mapUrl, cellsNumber = 30) {
+export async function insertMap(options) {
+    const { mapUrl, cellsNumber = 30 } = options;
     const { width, height } = await getImageDimensions(mapUrl);
     const image = {
         url: mapUrl,

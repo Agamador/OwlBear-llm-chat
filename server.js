@@ -21,6 +21,8 @@ app.use(express.json());
 
 // Almacenar conexiones SSE por tabId
 const sseConnections = new Map();
+// Almacenar promesas pendientes por tabId y requestId
+const pendingRequests = new Map();
 
 // Endpoint para acciones SSE (escuchar comandos)
 app.get('/actions/:tabId', (req, res) => {
@@ -53,16 +55,64 @@ app.get('/actions/:tabId', (req, res) => {
 // Endpoint para ejecutar acción en una pestaña específica
 app.post('/execute/:tabId', (req, res) => {
     const { tabId } = req.params;
-    const { action, args } = req.body;
+    const { action, args, timeout = 30000 } = req.body; // timeout por defecto 30 segundos
 
     const connection = sseConnections.get(tabId);
     if (!connection) {
         return res.status(404).json({ error: 'Pestaña no encontrada' });
     }
 
-    // Enviar acción a la pestaña
-    connection.write(`data: ${JSON.stringify({ action, args })}\n\n`);
-    res.json({ success: true, message: 'Acción enviada' });
+    // Generar un ID único para esta solicitud
+    const requestId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    // Crear una promesa para esperar la respuesta
+    const responsePromise = new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            pendingRequests.delete(requestId);
+            reject(new Error('Timeout: La acción no se completó en el tiempo esperado'));
+        }, timeout);
+
+        pendingRequests.set(requestId, { resolve, reject, timeoutId });
+    });
+
+    // Enviar acción a la pestaña con el requestId
+    connection.write(`data: ${JSON.stringify({ action, args, requestId })}\n\n`);
+
+    // Esperar la respuesta
+    responsePromise
+        .then(result => {
+            res.json({ success: true, result });
+        })
+        .catch(error => {
+            res.status(408).json({
+                success: false,
+                error: error.message
+            });
+        });
+});
+
+// Nuevo endpoint para que el cliente envíe la respuesta de la acción
+app.post('/response/:tabId', (req, res) => {
+    const { tabId } = req.params;
+    const { requestId, result, error } = req.body;
+
+    const pendingRequest = pendingRequests.get(requestId);
+    if (!pendingRequest) {
+        return res.status(404).json({ error: 'Solicitud no encontrada o ya procesada' });
+    }
+
+    // Limpiar timeout
+    clearTimeout(pendingRequest.timeoutId);
+    pendingRequests.delete(requestId);
+
+    // Resolver la promesa
+    if (error) {
+        pendingRequest.reject(new Error(error));
+    } else {
+        pendingRequest.resolve(result);
+    }
+
+    res.json({ success: true });
 });
 
 // Listar pestañas conectadas

@@ -9,6 +9,7 @@ class SimpleChat {
     }    // Listen for actions from external services
     setupExternalActions() {
         const apiUrl = process.env.SERVER_URL || 'http://localhost:3000';
+        this.apiUrl = apiUrl; // Store for later use in responses
         const eventSource = new EventSource(`${apiUrl}/actions/${this.tabId}`);
         eventSource.onmessage = (event) => {
             // Only show in dev
@@ -22,12 +23,12 @@ class SimpleChat {
                     return;
                 }
 
-                // Verify that it has action and args
-                if (data.action && data.args !== undefined) {
-                    console.log('🎮 Executing action:', data.action, 'with arguments:', data.args);
-                    this.executeOBRAction(data.action, data.args);
+                // Verify that it has action, args, and requestId
+                if (data.action && data.args !== undefined && data.requestId) {
+                    console.log('🎮 Executing action:', data.action, 'with arguments:', data.args, 'requestId:', data.requestId);
+                    this.executeOBRActionWithResponse(data.action, data.args, data.requestId);
                 } else {
-                    console.warn('⚠️ Message without action or args:', data);
+                    console.warn('⚠️ Message without action, args or requestId:', data);
                 }
             } catch (error) {
                 console.error('❌ Error parsing SSE message:', error);
@@ -39,7 +40,61 @@ class SimpleChat {
         eventSource.onopen = () => {
             console.log('✅ SSE connection established, TabId:', this.tabId);
         };
-    }    // Execute OBR action
+    }
+
+    // Execute OBR action with response back to server
+    async executeOBRActionWithResponse(action, args, requestId) {
+        try {
+            console.log('🚀 Executing with response:', action, 'with args:', args, 'requestId:', requestId);
+
+            // Verify that args is an array
+            if (!Array.isArray(args)) {
+                console.warn('⚠️ Args is not an array, converting:', args);
+                args = args ? [args] : [];
+            }
+
+            const result = await executeAction(action, ...args);
+            console.log('✅ Action completed:', result);
+
+            // Send response back to server
+            await this.sendResponseToServer(requestId, result);
+
+            return result;
+        } catch (error) {
+            console.log(error);
+            console.error('❌ Error executing action:', error);
+
+            // Send error response back to server
+            await this.sendResponseToServer(requestId, null, error.message);
+
+            throw error;
+        }
+    }
+
+    // Send response back to server
+    async sendResponseToServer(requestId, result = null, error = null) {
+        try {
+            const response = await fetch(`${this.apiUrl}/response/${this.tabId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestId,
+                    result: result,
+                    error: error
+                })
+            });
+
+            if (!response.ok) {
+                console.error('❌ Error sending response to server:', response.statusText);
+            } else {
+                console.log('✅ Response sent to server successfully');
+            }
+        } catch (fetchError) {
+            console.error('❌ Network error sending response to server:', fetchError);
+        }
+    }
+
+    // Execute OBR action
     async executeOBRAction(action, args) {
         try {
             console.log('🚀 Executing:', action, 'with args:', args);
