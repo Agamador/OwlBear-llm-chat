@@ -72,16 +72,26 @@ export async function getGameState() {
 
         const images = allItems
             .filter(item => item.type === 'IMAGE' && !item.metadata.isMap)
-            .map(item => ({
-                id: item.id,
-                name: item.metadata.name || 'NoName',
-                width: item.metadata.width,
-                height: item.metadata.height,
-                position: {
-                    x: item.position.x / dpi,
-                    y: item.position.y / dpi
-                },
-            }));
+            .map((item) => {
+                let result = {
+                    id: item.id,
+                    name: item.metadata.name || 'NoName',
+                    width: item.metadata.width,
+                    height: item.metadata.height,
+                    position: {
+                        x: item.position.x / dpi,
+                        y: item.position.y / dpi
+                    },
+
+                };
+
+                const lightRadius = item.metadata.light?.radiusCells || null;
+
+                if (lightRadius) {
+                    result.lightRadius = lightRadius;
+                }
+                return result;
+            });
 
         let map = allItems
             .filter(item => item.type === 'IMAGE' && item.metadata.isMap)
@@ -370,6 +380,11 @@ export async function removeFog() {
  */
 export async function addLightSource(options) {
     const { targetId, radiusCells = 3 } = options;
+    const token = (await OBR.scene.items.getItems([targetId]))[0];
+    if (token.metadata?.light) {
+        OBR.scene.local.deleteItems([token.metadata.light.id]);
+    }
+
     const dpi = await OBR.scene.grid.getDpi();
     const radiusPx = radiusCells * dpi;
 
@@ -382,13 +397,20 @@ export async function addLightSource(options) {
         .build();
     await OBR.scene.local.addItems([light]);
 
-    const token = (await OBR.scene.items.getItems([targetId]))[0];
-
     await executeAction('moveItem', {
         id: light.id,
         x: token.position.x / dpi + 0.5,
         y: token.position.y / dpi + 0.5,
         isLocal: true
+    });
+
+    OBR.scene.items.updateItems([token.id], (items) => {
+        items.forEach(item => {
+            item.metadata.light = {
+                id: light.id,
+                radiusCells: radiusCells
+            };
+        });
     });
 
     return { success: true, lightId: light.id };
