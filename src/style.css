@@ -155,7 +155,7 @@ body {
   background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.2rem;
   position: relative;
 }
 
@@ -178,7 +178,9 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  width: 100%;
+  width: auto;
+  min-width: 100px;
+  max-width: 80%;
 }
 
 .message.incoming {
@@ -189,45 +191,62 @@ body {
 .message.outgoing {
   align-self: flex-end;
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .message-sender {
   font-size: 1rem;
   font-weight: bolder;
-  margin-bottom: 0.1rem;
-  background: rgba(244, 232, 208, 0.7);
-  padding: 2px 6px;
-  border-radius: 4px;
+  margin-bottom: 0.15rem;
+  background: rgba(244, 232, 208, 0.8);
+  padding: 3px 8px;
+  border-radius: 4px 4px 0 0;
   display: inline-block;
   border: 1px solid rgba(139, 69, 19, 0.3);
+  border-bottom: none;
   font-family: "IM Fell English", serif;
   color: #2c1810;
   width: fit-content;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .message.incoming .message-sender {
   text-align: left;
-  align-self: start;
+  align-self: flex-start;
 }
 
 .message.outgoing .message-sender {
   text-align: right;
-  align-self: end;
+  align-self: flex-end;
 }
 
 .message-content {
-  padding: 0;
+  padding: 0.8rem;
   word-wrap: break-word;
   font-size: 1rem;
   line-height: 1.4;
-  background: transparent;
+  background: rgba(244, 232, 208, 0.75);
   color: #000000;
   position: relative;
   font-family: "IM Fell English", serif;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 69, 19, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.2rem;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.message.incoming .message-content {
+  border-left: 3px solid #8b4513;
 }
 
 .message.outgoing .message-content {
-  text-align: right;
+  text-align: left;
+  border-right: 3px solid #8b4513;
+  background: rgba(230, 218, 194, 0.75);
 }
 
 .system-message .message-content {
@@ -258,16 +277,17 @@ body {
   font-style: italic;
   color: #8b4513 !important;
   font-weight: 500;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(139, 69, 19, 0.1) 100%) !important;
+  background: linear-gradient(135deg, rgba(244, 232, 208, 0.8) 0%, rgba(230, 218, 194, 0.8) 100%) !important;
   border-left: 3px solid #d4af37;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   font-size: 1.05rem;
   position: relative;
   animation:
     shimmerText 1.5s infinite,
     pulsingBorder 2s infinite !important;
+  min-width: 16rem; /* Ancho mínimo para mensajes de carga */
 }
 
 .loading-message .message-content::after {
