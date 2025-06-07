@@ -387,12 +387,18 @@ export async function animateViewport(opts) {
         }
 
         /* ── Variante ①: enfocar coordenadas ───────────────────── */
-        const { x, y, scale = 1 } = opts;
+        let { x, y, scale = 1 } = opts;
         if (x === undefined || y === undefined) {
             throw new Error("Debes pasar x e y o bien itemIds");
         }
+
+        const pdi = await OBR.scene.grid.getDpi();
+        x *= pdi; // multiplica por pdi para pasar a píxeles
+        y *= pdi; // multiplica por pdi para pasar a píxeles
+
+        console.log("Animando viewport a:", { x, y, scale });
         await OBR.viewport.animateTo({
-            position: { x, y },
+            position: { x, y }, // multiplica por pdi para pasar a píxeles
             scale
         });
         return { success: true };

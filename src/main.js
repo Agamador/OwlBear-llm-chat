@@ -363,7 +363,8 @@ document.getElementById('test-button').addEventListener('click', async () => {
   })
   const tokenId = result.itemId;
 
-  // await obrAPI.executeOBRAction('startRoom')
+  // 
+
   // await obrAPI.executeOBRAction('animateViewport', [tokenId]);
 
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -381,13 +382,18 @@ document.getElementById('test-button').addEventListener('click', async () => {
   });
 
   await new Promise(resolve => setTimeout(resolve, 1000));
-  await obrAPI.executeOBRAction('createToken', {
+  const dragonRes = await obrAPI.executeOBRAction('createToken', {
     name: "Red Dragon",
     imageUrl: "https://144.24.204.95:5173/src/assets/redDragon.png",
     x: 14,
     y: 14,
     size: 3,
   });
+
+  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
+  //await obrAPI.executeOBRAction('animateViewport', { x: 14, y: 14, scale: 0.75 });
 
   console.log(await obrAPI.executeOBRAction('getGameState'));
 })
