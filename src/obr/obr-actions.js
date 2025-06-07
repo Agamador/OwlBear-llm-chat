@@ -299,21 +299,14 @@ export async function moveItem(options) {
 export async function deleteItem(options) {
     try {
         // Validate required parameters
-        const { ids } = options;
+        const { id } = options;
 
-        if (!ids) {
-            throw new Error("Missing required parameter: ids");
-        }
-
-        // Convert single ID to array if needed
-        const idsArray = Array.isArray(ids) ? ids : [ids];
-
-        if (idsArray.length === 0) {
-            throw new Error("No IDs provided for deletion");
+        if (!id) {
+            throw new Error("Missing required parameter: id");
         }
 
         // Delete the items
-        await OBR.scene.items.deleteItems(idsArray);
+        await OBR.scene.items.deleteItems([id]);
 
         return { success: true };
     } catch (error) {
