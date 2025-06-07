@@ -315,6 +315,21 @@ export async function deleteItem(options) {
     }
 }
 
+export async function emptyAll() {
+    try {
+        // Get all items in the scene
+        const allItems = await OBR.scene.items.getItems();
+        removeFog();
+        // Delete all items
+        if (allItems.length > 0) {
+            await OBR.scene.items.deleteItems(allItems.map(item => item.id));
+        }
+
+        return { success: true, message: 'All items deleted successfully' };
+    } catch (error) {
+
+    }
+}
 
 /**
  * Cubre todo el tablero con niebla al 100 %.
@@ -550,5 +565,6 @@ const actions = {
     startRoom,
     addLightSource,
     animateViewport,
-    insertMap
+    insertMap,
+    emptyAll
 };

@@ -33,6 +33,7 @@ document.querySelector('#app').innerHTML = `
       <button id="test-button" class="top-icon-button" aria-label="Test action">⚡</button>
       <h2>CHAT</h2>
       <div class="header-buttons">
+      <button id="eraser-button" class="top-icon-button" aria-label="Erase mode" title="Toggle eraser tool">🧽</button>
         <button id="clear-history-button" class="top-icon-button" aria-label="Clear chat history" title="Clear chat history">🗑️</button>
         <button id="change-api-key-button" class="top-icon-button" aria-label="Change API Key" title="Change API Key">🔑</button>
         <div class="info-icon" id="info-icon" title="Haz clic para copiar al portapapeles">
@@ -311,7 +312,7 @@ document.getElementById('clear-history-button').addEventListener('click', showCo
 document.getElementById('confirm-clear').addEventListener('click', clearChatHistory);
 document.getElementById('cancel-clear').addEventListener('click', hideConfirmationPopup);
 document.getElementById('change-api-key-button').addEventListener('click', changeApiKey);
-
+document.getElementById('eraser-button').addEventListener('click', () => { obrAPI.executeOBRAction('emptyAll') });
 // Evento para copiar el Tab ID al portapapeles
 document.getElementById('info-icon').addEventListener('click', copyTabIdToClipboard);
 
@@ -390,7 +391,7 @@ document.getElementById('test-button').addEventListener('click', async () => {
   });
 
   await new Promise(resolve => setTimeout(resolve, 2000));
-  //await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
+  await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
   await obrAPI.executeOBRAction('fillFog');
   await obrAPI.executeOBRAction('addLightSource', { targetId: tokenId });
   await obrAPI.executeOBRAction('moveItem', {
