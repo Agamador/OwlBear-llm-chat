@@ -6,7 +6,16 @@ setupWebSocketConnection();
 
 document.querySelector('#app').innerHTML = htmlContent;
 
+initializeTabId();
+
 checkApiKeyAndInitialize();
+
+function initializeTabId() {
+  const tooltip = document.getElementById('info-tooltip');
+  if (tooltip) {
+    tooltip.textContent = `Tab ID: ${obrAPI.getTabId()}`;
+  }
+}
 
 async function checkApiKeyAndInitialize() {
   try {
@@ -193,11 +202,10 @@ function copyTabIdToClipboard() {
   navigator.clipboard.writeText(tabId)
     .then(() => {
       const tooltip = document.getElementById('info-tooltip');
-      const originalText = tooltip.textContent;
       tooltip.textContent = '✅ Copied to clipboard!';
       tooltip.classList.add('copied');
       setTimeout(() => {
-        tooltip.textContent = originalText;
+        tooltip.textContent = `Tab ID: ${tabId}`;
         tooltip.classList.remove('copied');
       }, 2000);
     })
