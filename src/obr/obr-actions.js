@@ -1,19 +1,42 @@
 // 🎮 OBR Actions - SIMPLIFICADO
 import OBR, { buildImage, buildLight, buildShape } from "@owlbear-rodeo/sdk";
 
+const getImageDimensions = (url) =>
+    new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = reject;
+        img.src = url;
+    });
+
 // Crear formas
 export async function createShape(options) {
     try {
-        const { width = 100, height = 100, shapeType = 'CIRCLE', fillColor = '#ff0000', strokeColor = '#ff0000' } = options;
+        // Input size (width,height) and position (x,y) will be in cells
+        const { width = 1, height = 1, x = 0, y = 0, shapeType = 'CIRCLE', fillColor = '#ff0000', strokeColor = '#ff0000' } = options;
+
+        const dpi = await OBR.scene.grid.getDpi();
+        const pixelsWidth = width * dpi;
+        const pixelsHeight = height * dpi;
+
         const item = buildShape()
-            .width(width)
-            .height(height)
+            .width(pixelsWidth)
+            .height(pixelsHeight)
             .shapeType(shapeType)
             .fillColor(fillColor)
             .strokeColor(strokeColor)
+            .zIndex(10) // Default layer
+            .layer('MAP')
             .build();
 
         await OBR.scene.items.addItems([item]);
+
+        // Move the item to the specified position
+        await executeAction('moveItem', {
+            id: item.id,
+            x: x, // Center the shape in the cell
+            y: y  // Center the shape in the cell
+        });
 
         return { success: true, itemId: item.id };
 
@@ -112,49 +135,49 @@ export function createVector2(x = 0, y = 0) {
  */
 export async function createToken(options) {
     try {
-        // Validate required parameters first
+        // Input size and position (x,y) will be in cells
         const {
             name,
             imageUrl,
-            x,
-            y,
-            width = 100,
-            height = 100
+            x = 0,
+            y = 0,
+            size = 1,
         } = options;
 
         if (!name || !imageUrl || x === undefined || y === undefined) {
             throw new Error("Missing required parameters: name, imageUrl, x, or y");
         }
-        //repasar approach de sacar las dimensiones de la imagen
 
-        /* 1 ▸ obtén la resolución real de la cuadrícula del tablero */
-        const dpi = await OBR.scene.grid.getDpi();
+        const { width, height } = await getImageDimensions(imageUrl);
         const image = {
             url: imageUrl,
-            width,
-            height,
+            width: width,
+            height: height,
             mime: "image/png",
         };
 
-        /* 3 ▸ grid interno del token:
-              - dpi = anchura real  ➜ “una casilla” dentro de la textura
-              - offset = mitad de la imagen ➜ centramos el arte sobre su casilla */
+        const dpi = await OBR.scene.grid.getDpi();
         const grid = {
             dpi,
             offset: { x: 0, y: 0 },
         };
 
-        /* 4 ▸ escala para que 420 px → cellPx (70 px, o lo que use el tablero) */
-        const scale = dpi / image.width;                    // 0.166…
+        const scale = dpi * size / width;
 
-        /* 5 ▸ construye el token */
-        const token = buildImage(image, grid)                  // builder oficial :contentReference[oaicite:1]{index=1}
-            .scale({ x: scale, y: scale })                       // método de GenericItemBuilder :contentReference[oaicite:2]{index=2}
+        const token = buildImage(image, grid)
+            .scale({ x: scale, y: scale })
             .plainText(name)
             .build();
 
-        // Add token to scene
         await OBR.scene.items.addItems([token]);
+
+        if (x !== 0 || y !== 0) {
+            await executeAction('moveItem', {
+                id: token.id,
+                x: x, // Center the shape in the cell
+                y: y  // Center the shape in the cell
+            });
+        }
 
         return { success: true, itemId: token.id };
     } catch (error) {
@@ -174,16 +197,31 @@ export async function createToken(options) {
 export async function moveItem(options) {
     try {
         // Validate required parameters
+        // Position (x,y) will be in cells
         const { id, x, y } = options;
 
         if (!id || x === undefined || y === undefined) {
             throw new Error("Missing required parameters: id, x, or y");
         }
         // Update the position of the item
+        const dpi = await OBR.scene.grid.getDpi();
         await OBR.scene.items.updateItems([id], (items) => {
             // Should only be one item
             items.forEach(item => {
-                item.position = { x, y };
+                const pixelsWidth = item.width;
+                const pixelsHeight = item.height;
+                if (!pixelsWidth || !pixelsHeight) { // TOKENS
+                    item.position = {
+                        x: x * dpi,
+                        y: y * dpi
+                    };
+                }
+                else { // SHAPES
+                    item.position = {
+                        x: x * dpi + pixelsWidth / 2,
+                        y: y * dpi + pixelsHeight / 2
+                    };
+                }
             });
         });
         return { success: true };
@@ -223,28 +261,6 @@ export async function deleteItem(options) {
         console.error('Error deleting tokens:', error);
         return { success: false, error: error.message };
     }
-}
-
-// No se puede usar el spread ...args, porque mete en un array los argumentos
-// Si da fallo con otra tool habrá que modificar como se pasan según la tool
-export async function executeAction(actionName, args) {
-    if (!actions[actionName]) {
-        throw new Error(`Acción '${actionName}' no encontrada`);
-    }
-
-    if (!OBR.isAvailable) {
-        throw new Error('OBR no disponible');
-    }
-    return new Promise((resolve, reject) => {
-        OBR.onReady(async () => {
-            try {
-                const result = await actions[actionName](args);
-                resolve(result);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    });
 }
 
 
@@ -386,29 +402,54 @@ export function expandBounds(bounds, scaleFactor = 1.5) {
     };
 }
 
-export async function insertMap(mapUrl) {
+export async function insertMap(mapUrl, cellsNumber = 30) {
+    const { width, height } = await getImageDimensions(mapUrl);
     const image = {
         url: mapUrl,
-        width: 6000,
-        height: 6000,
+        width: width, // Ancho del mapa en píxeles
+        height: height, // Alto del mapa en píxeles
         mime: "image/png",
     };
 
     const dpi = await OBR.scene.grid.getDpi();
     const grid = {
-        dpi: dpi, // 30 cells square
+        dpi: dpi,
         offset: { x: 0, y: 0 },
     };
-    // Calculate escale based on map cell width in pixels (6000/30 = 200 px)
-    const scale = dpi / 200
-    console.log('insertMap', { image, grid });
+
+    // Image scale to fit cellsNumber grid
+    const scale = dpi * cellsNumber / width;
     const token = buildImage(image, grid)
+        .layer('MAP')
         .scale({ x: scale, y: scale })
-        .zIndex(-10)   // builder oficial :contentReference[oaicite:1]{index=1}      // método de GenericItemBuilder :contentReference[oaicite:2]{index=2}
+        .zIndex(1)   // builder oficial :contentReference[oaicite:1]{index=1}      // método de GenericItemBuilder :contentReference[oaicite:2]{index=2}
         .build();
+
     await OBR.scene.items.addItems([token]);
 
     return { success: true };
+}
+
+// No se puede usar el spread ...args, porque mete en un array los argumentos
+// Si da fallo con otra tool habrá que modificar como se pasan según la tool
+export async function executeAction(actionName, args) {
+    if (!actions[actionName]) {
+        throw new Error(`Acción '${actionName}' no encontrada`);
+    }
+
+    if (!OBR.isAvailable) {
+        throw new Error('OBR no disponible');
+    }
+    return new Promise((resolve, reject) => {
+        OBR.onReady(async () => {
+            try {
+                const result = await actions[actionName](args);
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
 }
 
 const actions = {

@@ -339,38 +339,55 @@ function copyTabIdToClipboard() {
 
 // Botón de prueba para crear un token en OBR
 document.getElementById('test-button').addEventListener('click', async () => {
-  const options = {
+  await obrAPI.executeOBRAction('insertMap', 'https://144.24.204.95:5173/src/assets/battleMap.jpg')
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  for (let i = 0; i < 30; i += 6) {
+    await obrAPI.executeOBRAction('createShape', {
+      x: i,
+      y: i,
+      width: 2,
+      height: 2,
+      shapeType: "CIRCLE",
+      fillColor: "#FF0000",
+      strokeColor: "#FF0000"
+    });
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  const result = await obrAPI.executeOBRAction('createToken', {
     name: "Knight",
     imageUrl: "https://144.24.204.95:5173/src/assets/human.png",
     x: 0,
     y: 0,
-    layer: "CHARACTER",
-    width: 420,
-    height: 420
-  }
-  const result = await obrAPI.executeOBRAction('createToken', options)
+    size: 1,
+  })
   const tokenId = result.itemId;
 
   // await obrAPI.executeOBRAction('startRoom')
   // await obrAPI.executeOBRAction('animateViewport', [tokenId]);
-  await obrAPI.executeOBRAction('insertMap', 'https://144.24.204.95:5173/src/assets/battleMap.jpg')
 
-  setTimeout(async () => {
-    setTimeout(async () => {
-      // Mover el token a una posición diferente
-      await obrAPI.executeOBRAction('moveItem', {
-        id: tokenId,
-        x: 0,
-        y: 0,
-      });
-    }, 2000)
-    //await obrAPI.executeOBRAction('deleteItem', { ids: tokenId });
-    await obrAPI.executeOBRAction('moveItem', {
-      id: tokenId,
-      x: 150,
-      y: 150
-    });
-  }, 2000);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await obrAPI.executeOBRAction('moveItem', {
+    id: tokenId,
+    x: 14,
+    y: 14,
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await obrAPI.executeOBRAction('moveItem', {
+    id: tokenId,
+    x: 29,
+    y: 29
+  });
+
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await obrAPI.executeOBRAction('createToken', {
+    name: "Red Dragon",
+    imageUrl: "https://144.24.204.95:5173/src/assets/redDragon.png",
+    x: 14,
+    y: 14,
+    size: 3,
+  })
 })
 
 // Cerrar popup con overlay o Escape
