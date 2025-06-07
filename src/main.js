@@ -387,7 +387,9 @@ document.getElementById('test-button').addEventListener('click', async () => {
     x: 14,
     y: 14,
     size: 3,
-  })
+  });
+
+  console.log(await obrAPI.executeOBRAction('getGameState'));
 })
 
 // Cerrar popup con overlay o Escape

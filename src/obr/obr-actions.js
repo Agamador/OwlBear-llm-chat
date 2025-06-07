@@ -55,23 +55,54 @@ export async function getGameState() {
 
         // Todos los elementos de la escena
         const allItems = await OBR.scene.items.getItems();
+        const pdi = await OBR.scene.grid.getDpi();
 
         // Estado simplificado
+        const shapes = allItems
+            .filter(item => item.type === 'SHAPE')
+            .map(item => ({
+                id: item.id,
+                shapeType: item.shapeType,
+                color: item.fillColor || 'NoColor',
+                position: {
+                    x: item.position.x / pdi,
+                    y: item.position.y / pdi
+                },
+            }));
+
+        const images = allItems
+            .filter(item => item.type === 'IMAGE' && !item.metadata.isMap)
+            .map(item => ({
+                id: item.id,
+                name: item.metadata.name || 'NoName',
+                width: item.metadata.width,
+                height: item.metadata.height,
+                position: {
+                    x: item.position.x / pdi,
+                    y: item.position.y / pdi
+                },
+            }));
+
+        let map = allItems
+            .filter(item => item.type === 'IMAGE' && item.metadata.isMap)
+            .map(item => ({
+                id: item.id,
+                name: 'Map',
+                width: item.metadata.width,
+                height: item.metadata.height,
+            }));
+
+        map = map.length == 1 ? map[0] : map; // Solo un mapa
+
         const gameState = {
             player: {
                 id: playerId,
                 name: playerName,
                 role: playerRole,
             },
-            items: allItems.map(item => ({
-                id: item.id,
-                type: item.type,
-                shapeType: item.shapeType || 'NotShape',
-                color: item.fillColor || 'NoColor',
-                position: item.position,
-                visible: item.visible !== false,
-                layer: item.layer,
-            }))
+            shapes,
+            images,
+            map,
         };
 
         return { success: true, gameState };
@@ -168,6 +199,13 @@ export async function createToken(options) {
             .scale({ x: scale, y: scale })
             .plainText(name)
             .build();
+
+        token.metadata = {
+            isMap: false,
+            width: size,
+            height: size,
+            name: name,
+        };
 
         await OBR.scene.items.addItems([token]);
 
@@ -424,6 +462,12 @@ export async function insertMap(mapUrl, cellsNumber = 30) {
         .scale({ x: scale, y: scale })
         .zIndex(1)   // builder oficial :contentReference[oaicite:1]{index=1}      // método de GenericItemBuilder :contentReference[oaicite:2]{index=2}
         .build();
+
+    token.metadata = {
+        isMap: true,
+        width: cellsNumber,
+        height: cellsNumber,
+    };
 
     await OBR.scene.items.addItems([token]);
 
