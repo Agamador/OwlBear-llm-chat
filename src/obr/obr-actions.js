@@ -434,35 +434,14 @@ export async function startRoom() {
  * ②  Si le pasas { itemIds:[...] } →  enfoca los ítems dados.  
  *
  * @param {{ x:number, y:number, scale?:number } |
- *         { itemIds:string[] }} opts
+ *         { itemsId:[]string }} itemsId
  * @returns {Promise<{success:boolean, error?:string}>}
  */
-export async function animateViewport(opts) {
+export async function animateViewport(itemsId) {
     try {
-        /* ── Variante ②: enfocar ítems ────────────────────────── */
-        if (Array.isArray(opts)) {
-            let bounds = await OBR.scene.items.getItemBounds(opts);
-            bounds = expandBounds(bounds, 20); // amplía los límites un 50%
-            await OBR.viewport.animateToBounds(bounds);   // zoom-fit a la sala
-            return { success: true };
-        }
-
-        /* ── Variante ①: enfocar coordenadas ───────────────────── */
-        let { x, y, scale = 1 } = opts;
-        if (x === undefined || y === undefined) {
-            throw new Error("Debes pasar x e y o bien itemIds");
-        }
-
-        const dpi = await OBR.scene.grid.getDpi();
-        x *= dpi; // multiplica por dpi para pasar a píxeles
-        y *= dpi; // multiplica por dpi para pasar a píxeles
-
-        console.log("Animando viewport a:", { x, y, scale });
-        await OBR.viewport.animateTo({
-            position: { x, y }, // multiplica por dpi para pasar a píxeles
-            scale
-        });
-        return { success: true };
+        const itemBounds = await OBR.scene.items.getItemBounds(itemsId);
+        const newBounds = expandBounds(itemBounds, 4); // Ampliar los límites un 50%
+        await OBR.viewport.animateToBounds(newBounds)
 
     } catch (err) {
         console.error("Error en animateViewport:", err);

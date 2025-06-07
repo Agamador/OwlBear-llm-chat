@@ -389,10 +389,8 @@ document.getElementById('test-button').addEventListener('click', async () => {
     size: 3,
   });
 
-  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
   await new Promise(resolve => setTimeout(resolve, 2000));
-  await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
-  //await obrAPI.executeOBRAction('animateViewport', { x: 14, y: 14, scale: 0.75 });
+  //await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
   await obrAPI.executeOBRAction('fillFog');
   await obrAPI.executeOBRAction('addLightSource', { targetId: tokenId });
   await obrAPI.executeOBRAction('moveItem', {
@@ -400,7 +398,7 @@ document.getElementById('test-button').addEventListener('click', async () => {
     x: 14,
     y: 14,
   });
-
+  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
   console.log(await obrAPI.executeOBRAction('getGameState'));
 })
 
