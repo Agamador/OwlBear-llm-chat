@@ -1,6 +1,15 @@
+import showdown from 'showdown';
 import htmlContent from './chat.html?raw';
 import './style.css';
 import { obrAPI, setupWebSocketConnection } from './websocket-client.js';
+
+// Initialize Showdown converter
+const converter = new showdown.Converter({
+  tables: true,
+  simpleLineBreaks: true,
+  strikethrough: true,
+  emoji: true
+});
 
 setupWebSocketConnection();
 
@@ -119,7 +128,6 @@ async function removeApiKey() {
 async function loadChatHistory() {
   const chatMessages = document.getElementById('chat-messages');
   const welcomeMessage = "Hello intrepid adventurer! Are you ready for a new role game?";
-
   try {
     const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
     let history = roomMetadata?.history;
@@ -133,16 +141,28 @@ async function loadChatHistory() {
     chatMessages.innerHTML = '';
     history.forEach(msg => {
       const isUser = msg.role === 'user';
+      // For each message, use addMessage which will convert markdown to HTML for assistant messages
       addMessage(msg.content, isUser ? 'Player' : 'Dungeon Master', isUser);
     });
-
   } catch (error) {
-    chatMessages.innerHTML = `
-      <div class="message incoming">
-        <div class="message-sender">Dungeon Master</div>
-        <div class="message-content">${welcomeMessage}</div>
-      </div>
-    `;
+    // Create welcome message with Markdown support
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message incoming';
+
+    const senderDiv = document.createElement('div');
+    senderDiv.className = 'message-sender';
+    senderDiv.textContent = 'Dungeon Master';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    // Convert welcome message markdown to HTML
+    contentDiv.innerHTML = converter.makeHtml(welcomeMessage);
+
+    messageDiv.appendChild(senderDiv);
+    messageDiv.appendChild(contentDiv);
+
+    chatMessages.innerHTML = '';
+    chatMessages.appendChild(messageDiv);
   }
 }
 
@@ -160,11 +180,13 @@ async function clearChatHistory() {
     hideConfirmationPopup();
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
+    // Define the welcome message (with potential markdown)
     const welcomeMessage = "Hello intrepid adventurer! Are you ready for a new role game?";
     const newHistory = [{ role: 'assistant', content: welcomeMessage }];
     const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
     roomMetadata.history = newHistory;
     await obrAPI.executeOBRAction('setRoomMetadata', roomMetadata);
+    // Add the welcome message using our function that handles markdown conversion
     addMessage(welcomeMessage, 'Dungeon Master', false);
   } catch (error) {
     console.error('Error clearing chat history:', error);
@@ -260,6 +282,8 @@ async function sendMessage() {
     if (!apiKey) throw new Error('Anthropic API key not found');
     const response = await obrAPI.callExternalService(content, apiKey);
     loadingEl.remove();
+    // response is in markdown format, stored in history as-is by callExternalService
+    // we render it using the addMessage function which will convert it to HTML
     addMessage(response, 'Dungeon Master', false);
   } catch (error) {
     console.error('Error calling external service:', error);
@@ -280,7 +304,11 @@ async function sendMessage() {
 function addMessage(content, sender, isOutgoing = true) {
   const div = document.createElement('div');
   div.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
-  div.innerHTML = `<div class="message-sender">${sender}</div><div class="message-content">${content}</div>`;
+
+  // Use Showdown to convert markdown to HTML for incoming messages only
+  const displayContent = !isOutgoing ? converter.makeHtml(content) : content;
+
+  div.innerHTML = `<div class="message-sender">${sender}</div><div class="message-content">${displayContent}</div>`;
   const container = document.getElementById('chat-messages');
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -315,7 +343,13 @@ function showLoadingMessage() {
     '⭐ Aligning with the cosmic forces...'
   ];
   const msg = messages[Math.floor(Math.random() * messages.length)];
-  const el = addMessage(msg, 'Dungeon Master', false);
-  el.classList.add('loading-message');
-  return el;
+
+  // Create the loading message manually to avoid markdown conversion
+  const div = document.createElement('div');
+  div.className = 'message incoming loading-message';
+  div.innerHTML = `<div class="message-sender">Dungeon Master</div><div class="message-content">${msg}</div>`;
+  const container = document.getElementById('chat-messages');
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
 }
