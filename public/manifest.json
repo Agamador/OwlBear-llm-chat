@@ -1,9 +1,10 @@
 {
-    "name": "LLM Game Master (local)",
-    "version": "1.0.0",
+    "name": "LLM Game Master",
+    "version": "0.1.0",
     "manifest_version": 1,
+    "icon": "/logo.png",
     "action": {
-        "title": "LLM Game Master (local)",
+        "title": "LLM Game Master",
         "icon": "/icon.svg",
         "popover": "/",
         "height": 600,
