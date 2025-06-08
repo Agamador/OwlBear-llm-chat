@@ -1,7 +1,7 @@
 import showdown from 'showdown';
 import htmlContent from './chat.html?raw';
+import { obrAPI, setupWebSocketConnection } from './obr-chat-client.js';
 import './style.css';
-import { obrAPI, setupWebSocketConnection } from './websocket-client.js';
 
 // Initialize Showdown converter
 const converter = new showdown.Converter({
