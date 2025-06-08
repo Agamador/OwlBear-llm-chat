@@ -100,6 +100,7 @@ export async function getGameState() {
                 player: { id: playerId, name: playerName, role: playerRole },
                 shapes,
                 images,
+                warFog: await OBR.scene.fog.getFilled(),
                 map,
             },
         };

@@ -214,7 +214,7 @@ function copyTabIdToClipboard() {
 
 document.getElementById('test-button').addEventListener('click', async () => {
   await obrAPI.executeOBRAction('removeFog');
-  await obrAPI.executeOBRAction('insertMap', 'https://144.24.204.95:5173/src/assets/battleMap.jpg');
+  await obrAPI.executeOBRAction('insertMap', { 'mapUrl': 'https://144.24.204.95:5173/src/assets/battleMap.jpg' });
   await new Promise(r => setTimeout(r, 2000));
   for (let i = 0; i < 30; i += 6) {
     await obrAPI.executeOBRAction('createShape', { x: i, y: i, width: 2, height: 2, shapeType: 'CIRCLE', fillColor: '#FF0000', strokeColor: '#FF0000' });
@@ -229,11 +229,13 @@ document.getElementById('test-button').addEventListener('click', async () => {
   await new Promise(r => setTimeout(r, 1000));
   const dragonRes = await obrAPI.executeOBRAction('createToken', { name: 'Red Dragon', imageUrl: 'https://144.24.204.95:5173/src/assets/redDragon.png', x: 14, y: 14, size: 3 });
   await new Promise(r => setTimeout(r, 2000));
-  await obrAPI.executeOBRAction('animateViewport', [dragonRes.itemId]);
+  await obrAPI.executeOBRAction('animateViewport', { 'itemsId': dragonRes.itemId });
+  await new Promise(r => setTimeout(r, 2000));
   await obrAPI.executeOBRAction('fillFog');
   await obrAPI.executeOBRAction('addLightSource', { targetId: tokenId });
-  await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 14, y: 14 });
-  await obrAPI.executeOBRAction('animateViewport', [tokenId]);
+  await obrAPI.executeOBRAction('moveItem', { id: tokenId, x: 15, y: 12 });
+  await obrAPI.executeOBRAction('animateViewport', { 'itemsId': tokenId });
+  await new Promise(r => setTimeout(r, 2000));
   console.log(await obrAPI.executeOBRAction('getGameState'));
 });
 
