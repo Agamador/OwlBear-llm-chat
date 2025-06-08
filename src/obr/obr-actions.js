@@ -298,7 +298,7 @@ export async function animateViewport(options) {
     const { itemsId } = options;
     try {
         const bounds = await OBR.scene.items.getItemBounds([itemsId]);
-        const expanded = expandBounds(bounds, 4);
+        const expanded = expandBounds(bounds, 8);
         await OBR.viewport.animateToBounds(expanded);
         return { success: true };
     } catch (err) {
