@@ -7,7 +7,7 @@
         "title": "LLM Game Master",
         "icon": "/icon.svg",
         "popover": "/",
-        "height": 600,
-        "width": 400
+        "height": 800,
+        "width": 600
     }
 }
