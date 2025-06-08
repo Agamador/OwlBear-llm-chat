@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<!-- Confirmation popup -->
+<!-- Chat History Confirmation popup -->
 <div class="confirmation-popup" id="confirmation-popup">
     <div class="popup-overlay"></div>
     <div class="popup-content">
@@ -65,6 +65,24 @@
         <div class="popup-buttons">
             <button id="cancel-clear" class="popup-button cancel-button">Cancel</button>
             <button id="confirm-clear" class="popup-button confirm-button">Clear History</button>
+        </div>
+    </div>
+</div>
+
+<!-- API Key Confirmation popup -->
+<div class="confirmation-popup" id="api-key-confirmation-popup">
+    <div class="popup-overlay"></div>
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3>⚠️ Confirm Action</h3>
+        </div>
+        <div class="popup-body">
+            <p>Are you sure you want to remove your API key?</p>
+            <p class="popup-warning">You will need to enter a new API key to continue using the chat.</p>
+        </div>
+        <div class="popup-buttons">
+            <button id="cancel-key-remove" class="popup-button cancel-button">Cancel</button>
+            <button id="confirm-key-remove" class="popup-button confirm-button">Remove Key</button>
         </div>
     </div>
 </div>

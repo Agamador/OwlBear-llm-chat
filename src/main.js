@@ -195,8 +195,18 @@ async function clearChatHistory() {
   }
 }
 
-async function changeApiKey() {
+function showApiKeyConfirmationPopup() {
+  document.getElementById('api-key-confirmation-popup').classList.add('show');
+  document.getElementById('cancel-key-remove').focus();
+}
+
+function hideApiKeyConfirmationPopup() {
+  document.getElementById('api-key-confirmation-popup').classList.remove('show');
+}
+
+async function executeApiKeyChange() {
   try {
+    hideApiKeyConfirmationPopup();
     await removeApiKey();
     document.getElementById('api-key-view').style.display = 'flex';
     document.getElementById('chat-view').style.display = 'none';
@@ -211,10 +221,17 @@ async function changeApiKey() {
   }
 }
 
+// This function now just shows the confirmation popup
+function changeApiKey() {
+  showApiKeyConfirmationPopup();
+}
+
 document.getElementById('clear-history-button').addEventListener('click', showConfirmationPopup);
 document.getElementById('confirm-clear').addEventListener('click', clearChatHistory);
 document.getElementById('cancel-clear').addEventListener('click', hideConfirmationPopup);
 document.getElementById('change-api-key-button').addEventListener('click', changeApiKey);
+document.getElementById('confirm-key-remove').addEventListener('click', executeApiKeyChange);
+document.getElementById('cancel-key-remove').addEventListener('click', hideApiKeyConfirmationPopup);
 document.getElementById('eraser-button').addEventListener('click', () => obrAPI.executeOBRAction('emptyAll'));
 document.getElementById('info-icon').addEventListener('click', copyTabIdToClipboard);
 
@@ -261,8 +278,22 @@ document.getElementById('test-button').addEventListener('click', async () => {
   console.log(await obrAPI.executeOBRAction('getGameState'));
 });
 
-document.querySelector('.popup-overlay').addEventListener('click', hideConfirmationPopup);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideConfirmationPopup(); });
+// Add event listeners for both confirmation popups
+document.querySelectorAll('.popup-overlay').forEach(overlay => {
+  if (overlay.parentElement.id === 'api-key-confirmation-popup') {
+    overlay.addEventListener('click', hideApiKeyConfirmationPopup);
+  } else {
+    overlay.addEventListener('click', hideConfirmationPopup);
+  }
+});
+
+// Handle escape key for both popups
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideConfirmationPopup();
+    hideApiKeyConfirmationPopup();
+  }
+});
 
 document.getElementById('send-button').addEventListener('click', sendMessage);
 document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
