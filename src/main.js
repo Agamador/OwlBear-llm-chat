@@ -118,7 +118,7 @@ async function removeApiKey() {
 
 async function loadChatHistory() {
   const chatMessages = document.getElementById('chat-messages');
-  const welcomeMessage = "Hello! How can I help you today?";
+  const welcomeMessage = "Hello intrepid adventurer! Are you ready for a new role game?";
 
   try {
     const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
@@ -160,7 +160,7 @@ async function clearChatHistory() {
     hideConfirmationPopup();
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = '';
-    const welcomeMessage = "Hello! How can I help you today?";
+    const welcomeMessage = "Hello intrepid adventurer! Are you ready for a new role game?";
     const newHistory = [{ role: 'assistant', content: welcomeMessage }];
     const roomMetadata = await obrAPI.executeOBRAction('getRoomMetadata');
     roomMetadata.history = newHistory;
