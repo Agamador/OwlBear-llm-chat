@@ -293,20 +293,10 @@ export async function startRoom() {
     return { success: true, message: "Room started successfully" };
 }
 
-/**
- * Anima la cámara del jugador.
- *
- * ①  Si le pasas { x, y, scale? }  →  centra en esas coords.  
- * ②  Si le pasas { itemIds:[...] } →  enfoca los ítems dados.  
- *
- * @param {{ x:number, y:number, scale?:number } |
- *         { itemsId:[]string }} itemsId
- * @returns {Promise<{success:boolean, error?:string}>}
- */
 export async function animateViewport(options) {
     const { itemsId } = options;
     try {
-        const bounds = await OBR.scene.items.getItemBounds(itemsId);
+        const bounds = await OBR.scene.items.getItemBounds([itemsId]);
         const expanded = expandBounds(bounds, 4);
         await OBR.viewport.animateToBounds(expanded);
         return { success: true };
