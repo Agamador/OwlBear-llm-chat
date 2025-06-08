@@ -256,13 +256,13 @@ export async function addLightSource(options) {
         await OBR.scene.local.deleteItems([token.metadata.light.id]);
     }
     const dpi = await OBR.scene.grid.getDpi();
-    const radiusPx = radiusCells * dpi;
-    const light = buildLight()
+    const radiusPx = radiusCells * dpi; const light = buildLight()
         .attachedTo(token.id)
         .attenuationRadius(radiusPx)
         .sourceRadius(0)
         .lightType("PRIMARY")
         .zIndex(1)
+        .attenuation(0) // Bordes duros sin difuminado
         .build();
     await OBR.scene.local.addItems([light]);
     await executeAction("moveItem", {
@@ -340,10 +340,11 @@ export async function insertMap(options) {
         .layer("MAP")
         .scale({ x: scale, y: scale })
         .zIndex(1)
+        .locked(true) // Lock the map to prevent accidental movement
         .build();
     token.metadata = { isMap: true, width: cellsNumber, height: cellsNumber };
     await OBR.scene.items.addItems([token]);
-    return { success: true };
+    return { success: true, itemId: token.id };
 }
 
 export async function executeAction(actionName, args) {
