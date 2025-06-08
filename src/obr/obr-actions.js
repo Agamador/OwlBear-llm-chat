@@ -259,10 +259,10 @@ export async function addLightSource(options) {
     const radiusPx = radiusCells * dpi; const light = buildLight()
         .attachedTo(token.id)
         .attenuationRadius(radiusPx)
-        .sourceRadius(0)
+        .sourceRadius(radiusPx)
         .lightType("PRIMARY")
         .zIndex(1)
-        .attenuation(0) // Bordes duros sin difuminado
+        .falloff(0.2)
         .build();
     await OBR.scene.local.addItems([light]);
     await executeAction("moveItem", {
