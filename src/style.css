@@ -197,7 +197,7 @@ body {
 }
 
 .message-sender {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: bolder;
   margin-bottom: 0.15rem;
   background: rgba(244, 232, 208, 0.8);
@@ -225,7 +225,7 @@ body {
 .message-content {
   padding: 0.8rem;
   word-wrap: break-word;
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1.4;
   background: rgba(244, 232, 208, 0.75);
   color: #000000;
@@ -282,12 +282,13 @@ body {
   padding: 0.8rem 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   position: relative;
   animation:
     shimmerText 1.5s infinite,
     pulsingBorder 2s infinite !important;
-  min-width: 16rem; /* Ancho mínimo para mensajes de carga */
+  min-width: 16rem;
+  /* Ancho mínimo para mensajes de carga */
 }
 
 .loading-message .message-content::after {
@@ -334,7 +335,7 @@ body {
   border: 2px solid #8b4513;
   border-radius: 8px;
   outline: none;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   background: rgba(255, 255, 255, 0.9);
   color: #4a2c17;
   font-family: inherit;
@@ -663,12 +664,15 @@ body {
     padding: 0.75rem;
     width: 260px;
   }
+
   .api-key-icon {
     font-size: 1.75rem;
   }
+
   .api-key-content h3 {
     font-size: 1.3rem;
   }
+
   .api-key-content p {
     font-size: 1rem;
   }
@@ -677,13 +681,16 @@ body {
 /* --- Keyframes --- */
 
 @keyframes loadingDots {
+
   0%,
   20% {
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -693,6 +700,7 @@ body {
   from {
     transform: translateY(-50%) rotate(0deg);
   }
+
   to {
     transform: translateY(-50%) rotate(360deg);
   }
@@ -703,6 +711,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -714,12 +723,14 @@ body {
     opacity: 0.7;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
   }
+
   50% {
     opacity: 1;
     text-shadow:
       0 0 10px rgba(212, 175, 55, 0.6),
       0 0 15px rgba(212, 175, 55, 0.4);
   }
+
   100% {
     opacity: 0.7;
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
@@ -732,11 +743,13 @@ body {
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
   }
+
   100% {
     opacity: 0.8;
     transform: scale(1);
@@ -749,12 +762,14 @@ body {
     border-left-color: #d4af37;
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
   }
+
   50% {
     border-left-color: #ffd700;
     box-shadow:
       0 2px 15px rgba(212, 175, 55, 0.4),
       inset 0 0 20px rgba(212, 175, 55, 0.1);
   }
+
   100% {
     border-left-color: #d4af37;
     box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
@@ -765,6 +780,7 @@ body {
   from {
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.2);
   }
+
   to {
     text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
   }
@@ -787,23 +803,23 @@ body {
 }
 
 .message-content h1 {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   border-bottom: 1px solid rgba(139, 69, 19, 0.3);
   padding-bottom: 0.2rem;
 }
 
 .message-content h2 {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   border-bottom: 1px solid rgba(139, 69, 19, 0.2);
   padding-bottom: 0.1rem;
 }
 
 .message-content h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 .message-content h4 {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
 }
 
 .message-content p {
