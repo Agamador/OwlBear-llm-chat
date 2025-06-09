@@ -253,7 +253,7 @@ function copyTabIdToClipboard() {
 
 document.getElementById('test-button').addEventListener('click', async () => {
   await obrAPI.executeOBRAction('removeFog');
-  await obrAPI.executeOBRAction('insertMap', { 'mapUrl': 'https://144.24.204.95:5173/src/assets/battleMap.jpg' });
+  await obrAPI.executeOBRAction('insertMap', { 'mapUrl': 'https://144.24.204.95:5173/src/assets/forestMap.jpg' });
   await new Promise(r => setTimeout(r, 2000));
   for (let i = 0; i < 30; i += 6) {
     await obrAPI.executeOBRAction('createShape', { x: i, y: i, width: 2, height: 2, shapeType: 'CIRCLE', fillColor: '#FF0000', strokeColor: '#FF0000' });
