@@ -1,5 +1,5 @@
 # 🧙‍♂️ OwlBear AI Game Master 🐉
-@Agamador @Javier-Jimenez99
+Made by: [@Agamador](https://github.com/Agamador) [@Javier-Jimenez99](https://github.com/Javier-Jimenez99)
 
 ## 🎥 Video Demo
 
