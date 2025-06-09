@@ -1,4 +1,5 @@
 # 🧙‍♂️ OwlBear AI Game Master 🐉
+@Agamador @Javier-Jimenez99
 
 ## 🎥 Video Demo
 
