@@ -2,9 +2,9 @@
 
 ## 🎥 Video Demo
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/SlbW-kjekBg?si=r6x8GeVnKLipriZL" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Video Demo](https://img.youtube.com/vi/SlbW-kjekBg/maxresdefault.jpg)](https://www.youtube.com/watch?v=SlbW-kjekBg&ab_channel=AlejandroGarcíaAmador)
 
-Video Demo: [https://www.youtube.com/watch?v=SlbW-kjekBg&ab_channel=AlejandroGarcíaAmador](https://www.youtube.com/watch?v=SlbW-kjekBg&ab_channel=AlejandroGarcíaAmador)
+**🎬 [Watch the Full Demo](https://www.youtube.com/watch?v=SlbW-kjekBg&ab_channel=AlejandroGarcíaAmador)**
 
 ## 🧩 Complete Architecture Overview
 ![Architecture Overview](https://huggingface.co/spaces/Agents-MCP-Hackathon/LLM-GameMaster-Agent/resolve/main/media/architecture.png)
