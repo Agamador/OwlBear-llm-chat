@@ -90,6 +90,7 @@ export async function getGameState() {
                 name: "Map",
                 width: item.metadata.width,
                 height: item.metadata.height,
+                imageUrl: item.metadata.url,
             }));
 
         map = map.length === 1 ? map[0] : map;
@@ -342,7 +343,7 @@ export async function insertMap(options) {
         .zIndex(1)
         .locked(true) // Lock the map to prevent accidental movement
         .build();
-    token.metadata = { isMap: true, width: cellsNumber, height: cellsNumber };
+    token.metadata = { isMap: true, width: cellsNumber, height: cellsNumber, url: mapUrl };
     await OBR.scene.items.addItems([token]);
     return { success: true, itemId: token.id };
 }
