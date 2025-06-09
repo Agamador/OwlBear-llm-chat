@@ -1,11 +1,10 @@
 // Servidor simplificado para ejecutar acciones OBR remotamente
-import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import https from 'https';
-import http from 'http';
+import express from 'express';
 import fs from 'fs';
-import path from 'path';
+import http from 'http';
+import https from 'https';
 
 const app = express();
 

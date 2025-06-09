@@ -1,41 +1,40 @@
 # Assets Directory
 
-This directory contains character tokens used in the Owlbear Rodeo Virtual Tabletop application. These assets can be used to create tokens on the game board using the `create_token` function from the `obr-actions.js` module.
+This directory contains character tokens, environment objects, items, and creatures used in the Owlbear Rodeo Virtual Tabletop application. These high-quality digital assets can be used to enhance your tabletop RPG experience by creating interactive tokens on the game board using the `create_token` function from the `obr-actions.js` module.
 
-## Available Character Tokens
+## Available Assets
+
+### Character Tokens
 
 | Filename | Character Type | Description |
 |----------|---------------|-------------|
-| `cat person #ffffff.png` | Humanoid Feline | A cat-like humanoid character token with white background |
-| `Half-elf Bard #ffffff.png` | Half-elf | A half-elf bard character token with white background |
-| `Half-orc cleric #ffffff.png` | Half-orc | A half-orc cleric character token with white background |
-| `Half-orc fighter #ffffff.png` | Half-orc | A half-orc fighter character token (variant 1) with white background |
-| `Half-orc fighter 2 #ffffff.png` | Half-orc | A half-orc fighter character token (variant 2) with white background |
-| `half-orc fighter 3 #ffffff.png` | Half-orc | A half-orc fighter character token (variant 3) with white background |
-| `Human #ffffff.png` | Human | A generic human character token with white background |
-| `Knight 1 #ffffff.png` | Knight | A knight character token (variant 1) with white background |
-| `Knight 2 #ffffff.png` | Knight | A knight character token (variant 2) with white background |
-| `Kurig #ffffff.png` | Character | A character token named Kurig with white background |
-| `Paladin #ffffff.png` | Paladin | A paladin character token with white background |
-| `Plague knight #ffffff.png` | Knight | A plague knight character token with white background |
+| `catPerson.png` | Humanoid Feline | A detailed anthropomorphic cat character with distinctive feline features, perfect for tabaxi or catfolk character races |
+| `halfElfBard.png` | Half-elf | An elegant half-elf bard character with musical instrument, combining elven grace and human versatility |
+| `halfOrcCleric.png` | Half-orc | A spiritually-focused half-orc cleric with religious symbols and healing capabilities |
+| `halfOrcFighter.png` | Half-orc | A muscular half-orc warrior with offensive melee weapons and light armor (variant 1) |
+| `halfOrcFighter2.png` | Half-orc | A battle-ready half-orc fighter with defensive gear and medium armor (variant 2) |
+| `halfOrcFighter3.png` | Half-orc | A powerful half-orc fighter with two-handed weapon specialization (variant 3) |
+| `human.png` | Human | A versatile human adventurer with standard adventuring gear, suitable for customizing as any class |
+| `knight1.png` | Knight | A traditional armored knight with sword and shield, representing nobility and martial prowess |
+| `knight2.png` | Knight | A heavily-armored elite knight with specialized weapons, showcasing veteran status |
+| `kurig.png` | Character | A unique named character "Kurig" with distinctive gear and appearance |
+| `paladin.png` | Paladin | A holy warrior paladin with divine symbols, heavy armor, and righteous bearing |
+| `plagueKnight.png` | Knight | An ominous plague knight with specialized mask and disease-themed equipment |
 
-## How to Use
+### Creatures & Monsters
 
-These assets can be used with the `create_token` function from the `obr-actions.js` module. Example:
+| Filename | Creature Type | Description |
+|----------|--------------|-------------|
+| `goblin.png` | Humanoid | A sneaky goblin warrior, perfect for low-level encounters |
+| `redDragon.png` | Dragon | A fearsome red dragon, one of the most iconic and dangerous monsters in fantasy RPGs |
+| `rockGolem.png` | Construct | A powerful stone golem constructed of animated rock, resistant to many types of damage |
 
-```javascript
-import { create_token } from '../obr/obr-actions';
+### Items & Environment
 
-// Create a token on the scene
-async function placeKnight() {
-  await create_token({
-    name: "Knight",
-    imageUrl: "./assets/Knight 1  #ffffff.png", // Path to the image
-    x: 100,
-    y: 100,
-    layer: "CHARACTER",
-    width: 100,
-    height: 100
-  });
-}
-```
+| Filename | Item Type | Description |
+|----------|----------|-------------|
+| `battleMap.jpg` | Environment | A detailed battle map that can be used as the background for encounters |
+| `book.png` | Item | A mystical tome or spell book that can be placed as an interactive object |
+| `chest.png` | Container | A treasure chest that can hold valuable loot for adventurers |
+| `sword.png` | Weapon | A classic sword that can be used as a weapon token or loot item |
+| `torch.png` | Equipment | A torch that provides light in dark environments |
